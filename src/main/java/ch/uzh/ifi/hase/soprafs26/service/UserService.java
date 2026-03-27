@@ -14,6 +14,7 @@ import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 
 import java.util.List;
 import java.util.UUID;
+import java.time.Instant;
 
 /**
  * User Service
@@ -38,18 +39,72 @@ public class UserService {
 		return this.userRepository.findAll();
 	}
 
-	public User createUser(User newUser) {
-		newUser.setToken(UUID.randomUUID().toString());
-		newUser.setStatus(UserStatus.OFFLINE);
-		checkIfUserExists(newUser);
-		// saves the given entity but data is only persisted in the database once
-		// flush() is called
-		newUser = userRepository.save(newUser);
-		userRepository.flush();
-
-		log.debug("Created Information for User: {}", newUser);
-		return newUser;
+	// helper:
+	private static boolean isBlank(String s) {
+		return s == null || s.trim().isEmpty();
 	}
+
+	//generally: this is registration logic:
+    public User createUser(User newUser) {
+
+        normalizeUserInput(newUser);
+        checkValidRegistrationData(newUser);
+        checkIfUserExists(newUser);
+
+        newUser = userRepository.save(newUser);
+        userRepository.flush();
+
+        log.debug("Created user: {}", newUser);
+        return newUser;
+    }
+
+    private void normalizeUserInput(User user) {
+        if (user.getUsername() != null) {
+            user.setUsername(user.getUsername().trim());
+        }
+        if (user.getSurname() != null) {
+            user.setSurname(user.getSurname().trim());
+        }
+        if (user.getLastname() != null) {
+            user.setLastname(user.getLastname().trim());
+        }
+        if (user.getEmailAddress() != null) {
+            user.setEmailAddress(user.getEmailAddress().trim());
+        }
+        if (user.getBio() != null) {
+            user.setBio(user.getBio().trim());
+        }
+    }
+
+    private void checkValidRegistrationData(User user) {
+        String baseErrorMessage = "%s must not be empty. Therefore, the user could not be created!";
+
+        if (isBlank(user.getUsername())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    String.format(baseErrorMessage, "Username"));
+        }
+
+        if (isBlank(user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    String.format(baseErrorMessage, "Password"));
+        }
+
+        if (isBlank(user.getSurname())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    String.format(baseErrorMessage, "Surname"));
+        }
+
+        if (isBlank(user.getLastname())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    String.format(baseErrorMessage, "Lastname"));
+        }
+
+        if (isBlank(user.getEmailAddress())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    String.format(baseErrorMessage, "Email address"));
+        }
+    }
+
 
 	/**
 	 * This is a helper method that will check the uniqueness criteria of the
@@ -63,16 +118,25 @@ public class UserService {
 	 */
 	private void checkIfUserExists(User userToBeCreated) {
 		User userByUsername = userRepository.findByUsername(userToBeCreated.getUsername());
-		User userByName = userRepository.findByName(userToBeCreated.getName());
+		User userByEmail = userRepository.findByEmailAddress(userToBeCreated.getEmailAddress());
 
 		String baseErrorMessage = "The %s provided %s not unique. Therefore, the user could not be created!";
-		if (userByUsername != null && userByName != null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-					String.format(baseErrorMessage, "username and the name", "are"));
+
+		if (userByUsername != null && userByEmail != null) {
+			throw new ResponseStatusException(
+				HttpStatus.BAD_REQUEST,
+				String.format(baseErrorMessage, "username and email", "are")
+			);
 		} else if (userByUsername != null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format(baseErrorMessage, "username", "is"));
-		} else if (userByName != null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format(baseErrorMessage, "name", "is"));
+			throw new ResponseStatusException(
+				HttpStatus.BAD_REQUEST,
+				String.format(baseErrorMessage, "username", "is")
+			);
+		} else if (userByEmail != null) {
+			throw new ResponseStatusException(
+				HttpStatus.BAD_REQUEST,
+				String.format(baseErrorMessage, "email", "is")
+			);
 		}
 	}
 }
