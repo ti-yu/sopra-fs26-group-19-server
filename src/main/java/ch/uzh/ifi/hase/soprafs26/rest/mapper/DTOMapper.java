@@ -21,11 +21,8 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 @Mapper
 public interface DTOMapper {
 
-	DTOMapper INSTANCE = Mappers.getMapper(DTOMapper.class);
+    DTOMapper INSTANCE = Mappers.getMapper(DTOMapper.class);
 
-	@Mapping(source = "username", target = "username")
-	User convertUserPostDTOtoEntity(UserPostDTO userPostDTO);
-
-	@Mapping(source = "username", target = "username")
-	UserGetDTO convertEntityToUserGetDTO(User user);
+    User convertUserPostDTOtoEntity(UserPostDTO userPostDTO);
+    UserGetDTO convertEntityToUserGetDTO(User user);
 }
