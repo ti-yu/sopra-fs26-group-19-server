@@ -39,6 +39,15 @@ public class UserService {
 		return this.userRepository.findAll();
 	}
 
+    public User getUserById(String id) {
+        return this.userRepository.findById(id).orElseThrow(() ->
+                new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "The user with id " + id + " was not found!"
+                )
+        );
+    }
+
 	// helper:
 	private static boolean isBlank(String s) {
 		return s == null || s.trim().isEmpty();
@@ -197,4 +206,50 @@ private void checkValidRegistrationData(User user) {
 			);
 		}
 	}
+    //generally: this is login logic:
+    public User loginUser(User userInput) {
+        //Validate that the frontend actually sent a username and password
+        checkValidLoginData(userInput);
+
+        //Find the user in the database
+        User existingUser = userRepository.findByUsername(userInput.getUsername().trim());
+
+        // Check if the user exists
+        if (existingUser == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "The username provided does not exist!"
+            );
+        }
+
+        // 4. Check if the password matches
+        if (!existingUser.getPassword().equals(userInput.getPassword().trim())) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "The password provided is incorrect!"
+            );
+        }
+
+
+        log.debug("Logged in user: {}", existingUser);
+        return existingUser;
+    }
+
+    private void checkValidLoginData(User user) {
+        String baseErrorMessage = "%s must not be empty. Therefore, the user could not be logged in!";
+
+        if (isBlank(user.getUsername())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    String.format(baseErrorMessage, "Username")
+            );
+        }
+
+        if (isBlank(user.getPassword())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    String.format(baseErrorMessage, "Password")
+            );
+        }
+    }
 }
