@@ -251,5 +251,11 @@ private void checkValidRegistrationData(User user) {
                     String.format(baseErrorMessage, "Password")
             );
         }
+
+    public User getUserById(String id) {
+    return userRepository.findById(id)
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND, "User with id " + id + " not found"
+        ));
     }
 }
