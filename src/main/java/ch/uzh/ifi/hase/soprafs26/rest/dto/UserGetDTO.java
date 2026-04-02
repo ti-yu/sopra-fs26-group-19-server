@@ -10,6 +10,7 @@ public class UserGetDTO {
 	private String username;
 	private String bio;
 	private LocalDate dateOfBirth;
+	private String gender;
 
 	public String getId() {
 		return id;
@@ -49,5 +50,13 @@ public class UserGetDTO {
 
 	public void setDateOfBirth (LocalDate dateOfBirth) {
 		this.dateOfBirth = dateOfBirth;
+	}
+
+	public String getGender() {
+		return gender;
+	}
+
+	public void setGender (String gender) {
+		this.gender = gender;
 	}
 }
