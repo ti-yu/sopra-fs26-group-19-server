@@ -18,6 +18,9 @@ public class User implements Serializable {
     @Column(nullable = false, unique = true, updatable = false)
     private String id = UUID.randomUUID().toString();
 
+	@Column(nullable = false, unique = true)
+	private String token;
+
     @Column(nullable = false)
     private boolean isVolunteer;
 
@@ -70,6 +73,15 @@ public class User implements Serializable {
     public void setId(String id) {
         this.id = id;
     }
+
+	public String getToken() {
+		return token;
+	}
+
+	public void setToken(String token) {
+		this.token = token;
+	}
+
 
     public boolean isVolunteer() {
         return isVolunteer;
