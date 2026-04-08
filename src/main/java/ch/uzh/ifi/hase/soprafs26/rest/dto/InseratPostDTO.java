@@ -2,7 +2,7 @@ package ch.uzh.ifi.hase.soprafs26.rest.dto;
 
 import java.time.LocalDate;
 
-public class InseratGetDTO {
+public class InseratPostDTO {
 
     private String id;
     private String recipientId;
