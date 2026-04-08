@@ -18,7 +18,7 @@ public class User implements Serializable {
     @Column(nullable = false, unique = true, updatable = false)
     private String id = UUID.randomUUID().toString();
 
-	@Column(nullable = false, unique = true)
+	@Column(nullable = true, unique = true)
 	private String token;
 
     @Column(nullable = false)

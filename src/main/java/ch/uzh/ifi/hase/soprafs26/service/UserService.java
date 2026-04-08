@@ -64,7 +64,7 @@ public class UserService {
         userRepository.flush();
 
         log.debug("Created user: {}", newUser);
-        return newUser;
+        return loginUser(newUser); // ✅ auto-login sets the token
     }
 
     private void normalizeUserInput(User user) {
