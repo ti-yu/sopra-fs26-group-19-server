@@ -61,7 +61,8 @@ public class UserGetDTO {
 		this.gender = gender;
 	}
 
-	public void getToken(String token) {
+	
+	public String getToken() {
 		return token;
 	}
 

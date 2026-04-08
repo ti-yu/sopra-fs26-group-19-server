@@ -228,9 +228,8 @@ public class UserService {
                     HttpStatus.UNAUTHORIZED,
                     "The password provided is incorrect!"
             );
-		user.setToken(UUID.randomUUID().toString()); // refresh token on login (recommended)
         }
-
+        existingUser.setToken(UUID.randomUUID().toString()); // ✅ correct variable, correct position
 
         log.debug("Logged in user: {}", existingUser);
         return existingUser;
