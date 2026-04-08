@@ -9,45 +9,31 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
 
-import java.util.ArrayList;
-import java.util.List;
-
-/**
- * User Controller
- * This class is responsible for handling all REST request that are related to
- * the user.
- * The controller will receive the request and delegate the execution to the
- * UserService and finally return the result.
- */
 @RestController
 public class UserController {
 
-	private final UserService userService;
+    private final UserService userService;
 
-	UserController(UserService userService) {
-		this.userService = userService;
-	}
+    UserController(UserService userService) {
+        this.userService = userService;
+    }
 
-	@GetMapping("/profile/{id}")
-	@ResponseStatus(HttpStatus.OK)
-	@ResponseBody
-	public UserGetDTO getUserById(@PathVariable String id) {
-		User user = userService.getUserById(id);
-		return DTOMapper.INSTANCE.convertEntityToUserGetDTO(user);
-	}
+    @GetMapping("/profile/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public UserGetDTO getUserById(@PathVariable String id) {
+        User user = userService.getUserById(id);
+        return DTOMapper.INSTANCE.convertEntityToUserGetDTO(user);
+    }
 
-	@PostMapping("/register")
-	@ResponseStatus(HttpStatus.CREATED)
-	@ResponseBody
-	public UserGetDTO createUser(@RequestBody UserPostDTO userPostDTO) {
-		// convert API user to internal representation
-		User userInput = DTOMapper.INSTANCE.convertUserPostDTOtoEntity(userPostDTO);
-
-		// create user
-		User createdUser = userService.createUser(userInput);
-		// convert internal representation of user back to API
-		return DTOMapper.INSTANCE.convertEntityToUserGetDTO(createdUser);
-	}
+    @PostMapping("/register")
+    @ResponseStatus(HttpStatus.CREATED)
+    @ResponseBody
+    public UserGetDTO createUser(@RequestBody UserPostDTO userPostDTO) {
+        User userInput = DTOMapper.INSTANCE.convertUserPostDTOtoEntity(userPostDTO);
+        User createdUser = userService.createUser(userInput);
+        return DTOMapper.INSTANCE.convertEntityToUserGetDTO(createdUser);
+    }
 
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
@@ -65,6 +51,4 @@ public class UserController {
         User foundUser = userService.getUserById(id);
         return DTOMapper.INSTANCE.convertEntityToUserGetDTO(foundUser);
     }
-
-
 }

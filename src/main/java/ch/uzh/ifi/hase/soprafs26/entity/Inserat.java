@@ -18,7 +18,14 @@ public class Inserat implements Serializable {
 
     @Id
     @Column(nullable = false, unique = true, updatable = false)
-    private String id = UUID.randomUUID().toString(); // hash
+    private String id;
+
+    @PrePersist
+    public void generateId() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID().toString();
+        }
+    }
 
     @ManyToOne
     @JoinColumn(name = "recipient_id", nullable = false)
@@ -50,14 +57,14 @@ public class Inserat implements Serializable {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private InseratStatus status;
+    private InseratStatus status = InseratStatus.OPEN;
 
     @Column(nullable = false)
-    private LocalDate creationDate;
+    private LocalDate creationDate = LocalDate.now();
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ReviewStatus reviewStatus;
+    private ReviewStatus reviewStatus = ReviewStatus.PENDING;
 
     public String getId() {
         return id;
