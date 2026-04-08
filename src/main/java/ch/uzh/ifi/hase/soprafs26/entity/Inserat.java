@@ -50,10 +50,10 @@ public class Inserat implements Serializable {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private InseratStatus status;
+    private InseratStatus status = InseratStatus.OPEN;
 
     @Column(nullable = false)
-    private LocalDate creationDate;
+    private LocalDate creationDate = LocalDate.now();
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
