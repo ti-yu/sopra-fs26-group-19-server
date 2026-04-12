@@ -1,6 +1,8 @@
 package ch.uzh.ifi.hase.soprafs26.controller;
 
 import ch.uzh.ifi.hase.soprafs26.entity.Inserat;
+import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.ApplicantDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.InseratGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.InseratPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
@@ -37,5 +39,31 @@ public class InseratController {
         return inserats.stream()
             .map(DTOMapper.INSTANCE::convertEntityToInseratGetDTO)
             .collect(Collectors.toList());
+    }
+
+    @GetMapping("/help-requests/{inseratId}/applicants")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public List<ApplicantDTO> getApplicants(@PathVariable String inseratId) {
+        List<User> applicants = inseratService.getApplicants(inseratId);
+        return applicants.stream()
+            .map(DTOMapper.INSTANCE::convertEntityToApplicantDTO)
+            .collect(Collectors.toList());
+    }
+
+    @PutMapping("/help-requests/{inseratId}/accept/{volunteerId}")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public InseratGetDTO acceptVolunteer(@PathVariable String inseratId, @PathVariable String volunteerId) {
+        Inserat updated = inseratService.acceptVolunteer(inseratId, volunteerId);
+        return DTOMapper.INSTANCE.convertEntityToInseratGetDTO(updated);
+    }
+
+    @PutMapping("/help-requests/{inseratId}/dismiss/{volunteerId}")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public InseratGetDTO dismissVolunteer(@PathVariable String inseratId, @PathVariable String volunteerId) {
+        Inserat updated = inseratService.dismissVolunteer(inseratId, volunteerId);
+        return DTOMapper.INSTANCE.convertEntityToInseratGetDTO(updated);
     }
 }

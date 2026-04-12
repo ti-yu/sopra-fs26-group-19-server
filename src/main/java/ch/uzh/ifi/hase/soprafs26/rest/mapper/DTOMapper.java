@@ -10,40 +10,35 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPutDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.InseratGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.InseratPostDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.ApplicantDTO;
 
-/**
- * DTOMapper
- * Responsible for mapping between internal entity representations and
- * external API representations (DTOs).
- *
- * Notes on boolean field mapping:
- * - User entity and all DTOs use getIsVolunteer()/setIsVolunteer() naming
- *   so that Jackson serializes/deserializes the JSON field as "isVolunteer".
- * - MapStruct sees the property name as "isVolunteer" on both sides,
- *   so no explicit @Mapping is needed for this field.
- */
+import java.util.List;
+
 @Mapper
 public interface DTOMapper {
 
     DTOMapper INSTANCE = Mappers.getMapper(DTOMapper.class);
 
-    // PostDTO -> Entity: all fields match by name (including isVolunteer)
     User convertUserPostDTOtoEntity(UserPostDTO userPostDTO);
 
-    // Entity -> GetDTO: all fields match by name. No "name" field exists
-    // on User entity, so we don't map it.
     UserGetDTO convertEntityToUserGetDTO(User user);
 
-    // PutDTO -> Entity: isVolunteer maps automatically since both sides
-    // use getIsVolunteer()/setIsVolunteer().
     User convertUserPutDTOtoEntity(UserPutDTO userPutDTO);
 
-    // InseratPostDTO -> Entity: straightforward field mapping
     Inserat convertInseratPostDTOtoEntity(InseratPostDTO inseratPostDTO);
 
-    // Entity -> InseratGetDTO: recipient is a User object on the entity,
-    // but recipientId is a String on the DTO, so we need an explicit mapping
-    // to extract the nested id.
     @Mapping(source = "recipient.id", target = "recipientId")
+    @Mapping(source = "recipient.username", target = "recipientUsername")
+    @Mapping(source = "volunteerApplied", target = "volunteerAppliedCount", qualifiedByName = "listSize")
+    @Mapping(source = "volunteerAccepted.username", target = "volunteerAcceptedUsername")
+    @Mapping(source = "volunteerAccepted.phoneNumber", target = "volunteerAcceptedPhone")
+    @Mapping(source = "volunteerAccepted.emailAddress", target = "volunteerAcceptedEmail")
     InseratGetDTO convertEntityToInseratGetDTO(Inserat inserat);
+
+    ApplicantDTO convertEntityToApplicantDTO(User user);
+
+    @Named("listSize")
+    default int listSize(List<?> list) {
+        return list == null ? 0 : list.size();
+    }
 }
