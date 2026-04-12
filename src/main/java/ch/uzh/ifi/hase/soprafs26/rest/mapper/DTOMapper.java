@@ -2,6 +2,7 @@ package ch.uzh.ifi.hase.soprafs26.rest.mapper;
 
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
+import org.mapstruct.ReportingPolicy;
 
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.entity.Inserat;
@@ -28,6 +29,9 @@ public interface DTOMapper {
     DTOMapper INSTANCE = Mappers.getMapper(DTOMapper.class);
 
     User convertUserPostDTOtoEntity(UserPostDTO userPostDTO);
+
+    @Mapping(source = "volunteer", target = "isVolunteer")
+    @Mapping(target = "name", ignore = true)
     UserGetDTO convertEntityToUserGetDTO(User user);
 
     @Mapping(source = "username", target = "username")
@@ -35,7 +39,7 @@ public interface DTOMapper {
     @Mapping(source = "surname", target = "surname")
     @Mapping(source = "lastname", target = "lastname")
     @Mapping(source = "emailAddress", target = "emailAddress")
-    @Mapping(source = "volunteer", target = "volunteer")
+    @Mapping(source = "isVolunteer", target = "volunteer")
     @Mapping(source = "bio", target = "bio")
     @Mapping(source = "address", target = "address")
     @Mapping(source = "gender", target = "gender")
