@@ -2,50 +2,76 @@ package ch.uzh.ifi.hase.soprafs26.rest.mapper;
 
 import org.junit.jupiter.api.Test;
 
-import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 
+import java.time.LocalDate;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * DTOMapperTest
- * Tests if the mapping between the internal and the external/API representation
- * works.
+ * Tests that DTOMapper correctly maps between User entity and DTOs.
+ * Verifies that all fields (including the boolean isVolunteer) are
+ * properly transferred in both directions.
  */
 public class DTOMapperTest {
-	@Test
-	public void testCreateUser_fromUserPostDTO_toUser_success() {
-		// create UserPostDTO
-		UserPostDTO userPostDTO = new UserPostDTO();
-		userPostDTO.setName("name");
-		userPostDTO.setUsername("username");
 
-		// MAP -> Create user
-		User user = DTOMapper.INSTANCE.convertUserPostDTOtoEntity(userPostDTO);
+    @Test
+    public void testCreateUser_fromUserPostDTO_toUser_success() {
+        // create a UserPostDTO with all fields set
+        UserPostDTO userPostDTO = new UserPostDTO();
+        userPostDTO.setUsername("testUser");
+        userPostDTO.setPassword("testPassword");
+        userPostDTO.setSurname("John");
+        userPostDTO.setLastname("Doe");
+        userPostDTO.setEmailAddress("john@example.com");
+        userPostDTO.setIsVolunteer(true);
+        userPostDTO.setBio("A bio");
+        userPostDTO.setAddress("Test Street 1");
+        userPostDTO.setGender("male");
+        userPostDTO.setPhoneNumber("+41 79 000 00 00");
+        userPostDTO.setDateOfBirth(LocalDate.of(2000, 1, 15));
 
-		// check content
-		assertEquals(userPostDTO.getName(), user.getName());
-		assertEquals(userPostDTO.getUsername(), user.getUsername());
-	}
+        // MAP: PostDTO -> User entity
+        User user = DTOMapper.INSTANCE.convertUserPostDTOtoEntity(userPostDTO);
 
-	@Test
-	public void testGetUser_fromUser_toUserGetDTO_success() {
-		// create User
-		User user = new User();
-		user.setName("Firstname Lastname");
-		user.setUsername("firstname@lastname");
-		user.setStatus(UserStatus.OFFLINE);
-		user.setToken("1");
+        // Verify all fields are mapped correctly
+        assertEquals("testUser", user.getUsername());
+        assertEquals("testPassword", user.getPassword());
+        assertEquals("John", user.getSurname());
+        assertEquals("Doe", user.getLastname());
+        assertEquals("john@example.com", user.getEmailAddress());
+        assertEquals(true, user.getIsVolunteer());
+        assertEquals("A bio", user.getBio());
+    }
 
-		// MAP -> Create UserGetDTO
-		UserGetDTO userGetDTO = DTOMapper.INSTANCE.convertEntityToUserGetDTO(user);
+    @Test
+    public void testGetUser_fromUser_toUserGetDTO_success() {
+        // create a User entity with all fields set
+        User user = new User();
+        user.setId("test-uuid-123");
+        user.setUsername("testUser");
+        user.setSurname("John");
+        user.setLastname("Doe");
+        user.setEmailAddress("john@example.com");
+        user.setIsVolunteer(false);
+        user.setBio("A bio");
+        user.setGender("male");
+        user.setToken("test-token");
+        user.setDateOfBirth(LocalDate.of(2000, 1, 15));
 
-		// check content
-		assertEquals(user.getId(), userGetDTO.getId());
-		assertEquals(user.getName(), userGetDTO.getName());
-		assertEquals(user.getUsername(), userGetDTO.getUsername());
-		assertEquals(user.getStatus(), userGetDTO.getStatus());
-	}
+        // MAP: User entity -> GetDTO
+        UserGetDTO userGetDTO = DTOMapper.INSTANCE.convertEntityToUserGetDTO(user);
+
+        // Verify all fields are mapped correctly
+        assertEquals("test-uuid-123", userGetDTO.getId());
+        assertEquals("testUser", userGetDTO.getUsername());
+        assertEquals("John", userGetDTO.getSurname());
+        assertEquals("Doe", userGetDTO.getLastname());
+        assertEquals("john@example.com", userGetDTO.getEmailAddress());
+        assertEquals(false, userGetDTO.getIsVolunteer());
+        assertEquals("A bio", userGetDTO.getBio());
+        assertEquals("test-token", userGetDTO.getToken());
+    }
 }

@@ -2,7 +2,6 @@ package ch.uzh.ifi.hase.soprafs26.rest.mapper;
 
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
-import org.mapstruct.ReportingPolicy;
 
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.entity.Inserat;
@@ -14,40 +13,37 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.InseratPostDTO;
 
 /**
  * DTOMapper
- * This class is responsible for generating classes that will automatically
- * transform/map the internal representation
- * of an entity (e.g., the User) to the external/API representation (e.g.,
- * UserGetDTO for getting, UserPostDTO for creating)
- * and vice versa.
- * Additional mappers can be defined for new entities.
- * Always created one mapper for getting information (GET) and one mapper for
- * creating information (POST).
+ * Responsible for mapping between internal entity representations and
+ * external API representations (DTOs).
+ *
+ * Notes on boolean field mapping:
+ * - User entity and all DTOs use getIsVolunteer()/setIsVolunteer() naming
+ *   so that Jackson serializes/deserializes the JSON field as "isVolunteer".
+ * - MapStruct sees the property name as "isVolunteer" on both sides,
+ *   so no explicit @Mapping is needed for this field.
  */
 @Mapper
 public interface DTOMapper {
 
     DTOMapper INSTANCE = Mappers.getMapper(DTOMapper.class);
 
+    // PostDTO -> Entity: all fields match by name (including isVolunteer)
     User convertUserPostDTOtoEntity(UserPostDTO userPostDTO);
 
-    @Mapping(source = "volunteer", target = "isVolunteer")
-    @Mapping(target = "name", ignore = true)
+    // Entity -> GetDTO: all fields match by name. No "name" field exists
+    // on User entity, so we don't map it.
     UserGetDTO convertEntityToUserGetDTO(User user);
 
-    @Mapping(source = "username", target = "username")
-    @Mapping(source = "password", target = "password")
-    @Mapping(source = "surname", target = "surname")
-    @Mapping(source = "lastname", target = "lastname")
-    @Mapping(source = "emailAddress", target = "emailAddress")
-    @Mapping(source = "isVolunteer", target = "volunteer")
-    @Mapping(source = "bio", target = "bio")
-    @Mapping(source = "address", target = "address")
-    @Mapping(source = "gender", target = "gender")
-    @Mapping(source = "phoneNumber", target = "phoneNumber")
-    @Mapping(source = "dateOfBirth", target = "dateOfBirth")
+    // PutDTO -> Entity: isVolunteer maps automatically since both sides
+    // use getIsVolunteer()/setIsVolunteer().
     User convertUserPutDTOtoEntity(UserPutDTO userPutDTO);
 
-
+    // InseratPostDTO -> Entity: straightforward field mapping
     Inserat convertInseratPostDTOtoEntity(InseratPostDTO inseratPostDTO);
+
+    // Entity -> InseratGetDTO: recipient is a User object on the entity,
+    // but recipientId is a String on the DTO, so we need an explicit mapping
+    // to extract the nested id.
+    @Mapping(source = "recipient.id", target = "recipientId")
     InseratGetDTO convertEntityToInseratGetDTO(Inserat inserat);
 }
