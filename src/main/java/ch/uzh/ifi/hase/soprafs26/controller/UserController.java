@@ -46,16 +46,6 @@ public class UserController {
     }
 
 
-    //Chammer probably lösche!! nomal ahluege
-    @GetMapping("/users/{id}/profile")
-    @ResponseStatus(HttpStatus.OK)
-    @ResponseBody
-    public UserGetDTO getUserProfile(@PathVariable String id) {
-        User foundUser = userService.getUserById(id);
-        return DTOMapper.INSTANCE.convertEntityToUserGetDTO(foundUser);
-    }
-
-
     @PutMapping("/profile/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ResponseBody

@@ -83,12 +83,16 @@ public class User implements Serializable {
 	}
 
 
-    public boolean isVolunteer() {
+    // Using getIsVolunteer/setIsVolunteer naming so that Jackson correctly
+    // serializes this field as "isVolunteer" in JSON (not "volunteer").
+    // The standard JavaBeans convention for boolean isX() would make Jackson
+    // strip the "is" prefix, causing a mismatch with what the client sends.
+    public boolean getIsVolunteer() {
         return isVolunteer;
     }
 
-    public void setVolunteer(boolean volunteer) {
-        isVolunteer = volunteer;
+    public void setIsVolunteer(boolean isVolunteer) {
+        this.isVolunteer = isVolunteer;
     }
 
     public String getUsername() {

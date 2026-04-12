@@ -59,12 +59,14 @@ public class UserPostDTO {
         this.emailAddress = emailAddress;
     }
 
-    public boolean isVolunteer() {
+    // Using getIsVolunteer/setIsVolunteer so Jackson maps JSON "isVolunteer" correctly.
+    // The isVolunteer() getter convention would make Jackson look for "volunteer" instead.
+    public boolean getIsVolunteer() {
         return isVolunteer;
     }
 
-    public void setVolunteer(boolean volunteer) {
-        isVolunteer = volunteer;
+    public void setIsVolunteer(boolean isVolunteer) {
+        this.isVolunteer = isVolunteer;
     }
 
     public String getBio() {

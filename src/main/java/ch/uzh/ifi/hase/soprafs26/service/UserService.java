@@ -285,7 +285,7 @@ public class UserService {
             existingUser.setEmailAddress(userInput.getEmailAddress().trim());
         }
 
-        existingUser.setVolunteer(userInput.isVolunteer());
+        existingUser.setIsVolunteer(userInput.getIsVolunteer());
 
         if (!isBlank(userInput.getBio())) {
             existingUser.setBio(userInput.getBio().trim());
