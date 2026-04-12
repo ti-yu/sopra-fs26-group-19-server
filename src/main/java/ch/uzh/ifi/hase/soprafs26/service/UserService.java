@@ -229,7 +229,7 @@ public class UserService {
                     "The password provided is incorrect!"
             );
         }
-        existingUser.setToken(UUID.randomUUID().toString()); // ✅ correct variable, correct position
+        existingUser.setToken(UUID.randomUUID().toString());
 
         log.debug("Logged in user: {}", existingUser);
         return existingUser;
@@ -252,5 +252,63 @@ public class UserService {
             );
         }
 
+    }
+
+    public void updateUser(String id, User userInput) {
+        User existingUser = getUserById(id);
+
+        if (!isBlank(userInput.getUsername())) {
+            User userByUsername = userRepository.findByUsername(userInput.getUsername().trim());
+            if (userByUsername != null && !userByUsername.getId().equals(existingUser.getId())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Username is already taken!");
+            }
+            existingUser.setUsername(userInput.getUsername().trim());
+        }
+
+        if (!isBlank(userInput.getPassword())) {
+            existingUser.setPassword(userInput.getPassword().trim());
+        }
+
+        if (!isBlank(userInput.getSurname())) {
+            existingUser.setSurname(userInput.getSurname().trim());
+        }
+
+        if (!isBlank(userInput.getLastname())) {
+            existingUser.setLastname(userInput.getLastname().trim());
+        }
+
+        if (!isBlank(userInput.getEmailAddress())) {
+            User userByEmail = userRepository.findByEmailAddress(userInput.getEmailAddress().trim());
+            if (userByEmail != null && !userByEmail.getId().equals(existingUser.getId())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Email address is already taken!");
+            }
+            existingUser.setEmailAddress(userInput.getEmailAddress().trim());
+        }
+
+        existingUser.setVolunteer(userInput.isVolunteer());
+
+        if (!isBlank(userInput.getBio())) {
+            existingUser.setBio(userInput.getBio().trim());
+        }
+
+        if (!isBlank(userInput.getAddress())) {
+            existingUser.setAddress(userInput.getAddress().trim());
+        }
+
+        if (!isBlank(userInput.getGender())) {
+            existingUser.setGender(userInput.getGender().trim());
+        }
+
+        if (!isBlank(userInput.getPhoneNumber())) {
+            existingUser.setPhoneNumber(userInput.getPhoneNumber().trim());
+        }
+
+        if (userInput.getDateOfBirth() != null) {
+            existingUser.setDateOfBirth(userInput.getDateOfBirth());
+        }
+
+        userRepository.save(existingUser);
+        userRepository.flush();
+        log.debug("Updated user: {}", existingUser);
     }
 }

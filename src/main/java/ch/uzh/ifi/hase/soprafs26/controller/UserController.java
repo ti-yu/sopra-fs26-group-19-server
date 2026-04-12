@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPutDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
 
@@ -44,11 +45,22 @@ public class UserController {
         return DTOMapper.INSTANCE.convertEntityToUserGetDTO(authorizedUser);
     }
 
+
+    //Chammer probably lösche!! nomal ahluege
     @GetMapping("/users/{id}/profile")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
     public UserGetDTO getUserProfile(@PathVariable String id) {
         User foundUser = userService.getUserById(id);
         return DTOMapper.INSTANCE.convertEntityToUserGetDTO(foundUser);
+    }
+
+
+    @PutMapping("/profile/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @ResponseBody
+    public void updateUser(@PathVariable String id, @RequestBody UserPutDTO userPutDTO) {
+        User userInput = DTOMapper.INSTANCE.convertUserPutDTOtoEntity(userPutDTO);
+        userService.updateUser(id, userInput);
     }
 }
