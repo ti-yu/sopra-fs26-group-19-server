@@ -12,6 +12,12 @@ public class UserGetDTO {
 	private LocalDate dateOfBirth;
 	private String gender;
 	private String token;
+    private String surname;
+    private String lastname;
+    private String emailAddress;
+    private String phoneNumber;
+    private String address;
+    private Boolean isVolunteer;
 
 	public String getId() {
 		return id;
@@ -69,4 +75,47 @@ public class UserGetDTO {
 	public void setToken(String token) {
 		this.token = token;
 	}
+
+    public String getSurname() {
+        return surname;
+    }
+    public void setSurname(String surname) {
+        this.surname = surname;
+    }
+
+    public String getLastname() {
+        return lastname;
+    }
+    public void setLastname(String lastname) {
+        this.lastname = lastname;
+    }
+    public String getEmailAddress() {
+        return emailAddress;
+    }
+    public void setEmailAddress(String emailAddress) {
+        this.emailAddress = emailAddress;
+    }
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+    public Boolean getIsVolunteer() {
+        return isVolunteer;
+    }
+
+    public void setIsVolunteer(Boolean isVolunteer) {
+        this.isVolunteer = isVolunteer;
+    }
+
+
 }

@@ -8,7 +8,7 @@ public class UserPutDTO {
     private String surname;
     private String lastname;
     private String emailAddress;
-    private boolean isVolunteer;
+    private Boolean isVolunteer;
     private String bio;
     private String address;
     private String gender;
@@ -56,12 +56,12 @@ public class UserPutDTO {
         this.emailAddress = emailAddress;
     }
 
-    public boolean getVolunteer() {
+    public Boolean getIsVolunteer() {
         return isVolunteer;
     }
 
-    public void setVolunteer(boolean volunteer) {
-        isVolunteer = volunteer;
+    public void setIsVolunteer(Boolean isVolunteer) {
+        this.isVolunteer = isVolunteer;
     }
 
     public String getBio() {
