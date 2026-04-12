@@ -7,6 +7,7 @@ import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.entity.Inserat;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPutDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.InseratGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.InseratPostDTO;
 
@@ -28,6 +29,20 @@ public interface DTOMapper {
 
     User convertUserPostDTOtoEntity(UserPostDTO userPostDTO);
     UserGetDTO convertEntityToUserGetDTO(User user);
+
+    @Mapping(source = "username", target = "username")
+    @Mapping(source = "password", target = "password")
+    @Mapping(source = "surname", target = "surname")
+    @Mapping(source = "lastname", target = "lastname")
+    @Mapping(source = "emailAddress", target = "emailAddress")
+    @Mapping(source = "volunteer", target = "volunteer")
+    @Mapping(source = "bio", target = "bio")
+    @Mapping(source = "address", target = "address")
+    @Mapping(source = "gender", target = "gender")
+    @Mapping(source = "phoneNumber", target = "phoneNumber")
+    @Mapping(source = "dateOfBirth", target = "dateOfBirth")
+    User convertUserPutDTOtoEntity(UserPutDTO userPutDTO);
+
 
     Inserat convertInseratPostDTOtoEntity(InseratPostDTO inseratPostDTO);
     InseratGetDTO convertEntityToInseratGetDTO(Inserat inserat);
