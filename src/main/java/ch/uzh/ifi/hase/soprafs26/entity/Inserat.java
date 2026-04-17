@@ -50,6 +50,12 @@ public class Inserat implements Serializable {
     private String location;
 
     @Column(nullable = false)
+    private Double latitude;
+    
+    @Column(nullable = false)
+    private Double longitude;
+
+    @Column(nullable = false)
     private LocalDate date;
 
     @Column(nullable = false)
@@ -112,6 +118,22 @@ public class Inserat implements Serializable {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 
     public LocalDate getDate() {
