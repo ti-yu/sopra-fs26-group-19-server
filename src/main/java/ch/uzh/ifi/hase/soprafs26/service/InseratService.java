@@ -16,6 +16,7 @@ import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -141,5 +142,12 @@ public class InseratService {
 
     private static boolean isBlank(String s) {
         return s == null || s.trim().isEmpty();
+    }
+
+
+    public List<Inserat> getAllInserats() {
+    return inseratRepository.findAll().stream()
+        .filter(inserat -> inserat.getLatitude() != null && inserat.getLongitude() != null)
+        .collect(Collectors.toList());
     }
 }
