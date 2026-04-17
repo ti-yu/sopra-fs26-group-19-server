@@ -66,6 +66,9 @@ public class Inserat implements Serializable {
     @Column(nullable = false)
     private ReviewStatus reviewStatus = ReviewStatus.PENDING;
 
+    @Column(nullable = false)
+    private String workType;
+
     public String getId() {
         return id;
     }
@@ -153,4 +156,8 @@ public class Inserat implements Serializable {
     public void setReviewStatus(ReviewStatus reviewStatus) {
         this.reviewStatus = reviewStatus;
     }
+
+    public String getWorkType(){return workType;}
+
+    public void setWorkType(String workType){this.workType = workType;}
 }

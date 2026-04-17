@@ -10,6 +10,7 @@ public class InseratPostDTO {
     private String location;
     private LocalDate date;
     private String timeframe;
+    private String workType;
 
     public String getId() {
         return id;
@@ -58,4 +59,8 @@ public class InseratPostDTO {
     public void setTimeframe(String timeframe) {
         this.timeframe = timeframe;
     }
+
+    public String getWorkType() {return workType;}
+
+    public void setWorkType(String workType) {this.workType = workType;}
 }
