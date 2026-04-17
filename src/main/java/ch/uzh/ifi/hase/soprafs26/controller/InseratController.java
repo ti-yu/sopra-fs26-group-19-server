@@ -66,4 +66,14 @@ public class InseratController {
         Inserat updated = inseratService.dismissVolunteer(inseratId, volunteerId);
         return DTOMapper.INSTANCE.convertEntityToInseratGetDTO(updated);
     }
+
+    @GetMapping("/help-requests-map")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public List<InseratGetDTO> getAllInserats() {
+        List<Inserat> inserats = inseratService.getAllInserats();
+        return inserats.stream()
+            .map(DTOMapper.INSTANCE::convertEntityToInseratGetDTO)
+            .collect(Collectors.toList());
+    }
 }
