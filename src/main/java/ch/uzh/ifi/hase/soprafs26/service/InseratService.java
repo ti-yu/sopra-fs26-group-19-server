@@ -84,6 +84,12 @@ public class InseratService {
         return inserat;
     }
 
+    public User getRecipientByInserat(String inseratId) {
+        Inserat inserat = inseratRepository.findById(inseratId).orElseThrow(() ->
+            new ResponseStatusException(HttpStatus.NOT_FOUND, "Inserat not found"));
+        return inserat.getRecipient();
+    }
+
     private void autoFinishPastInserats(List<Inserat> inserats) {
         LocalDate today = LocalDate.now();
         for (Inserat inserat : inserats) {

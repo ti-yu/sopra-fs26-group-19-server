@@ -7,10 +7,18 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.time.Period;
+
+
 
 @Entity
 @Table(name = "users")
 public class User implements Serializable {
+    
+    public int getAge() {
+    if (this.dateOfBirth == null) return 0;
+    return Period.between(this.dateOfBirth, LocalDate.now()).getYears();
+    }
 
     private static final long serialVersionUID = 1L;
 

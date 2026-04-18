@@ -13,9 +13,11 @@ public class UserGetDTO {
     private String address;
     private String bio;
     private LocalDate dateOfBirth;
+    private int age;
     private String gender;
     private String token;
     private Boolean isVolunteer;
+    
 
     public String getId() {
         return id;
@@ -88,6 +90,9 @@ public class UserGetDTO {
     public void setDateOfBirth(LocalDate dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
+
+    public int getAge() { return age; }
+    public void setAge(int age) { this.age = age; }
 
     public String getGender() {
         return gender;

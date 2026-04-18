@@ -8,6 +8,9 @@ public class InseratGetDTO {
     private String id;
     private String recipientId;
     private String recipientUsername;
+    private String recipientSurname;
+    private String recipientLastname;
+    private int recipientAge;
     private String description;
     private String location;
     private Double latitude;
@@ -20,6 +23,8 @@ public class InseratGetDTO {
     private String volunteerAcceptedUsername;
     private String volunteerAcceptedPhone;
     private String volunteerAcceptedEmail;
+    private String workType;
+
 
     public String getId() {
         return id;
@@ -44,6 +49,17 @@ public class InseratGetDTO {
     public void setRecipientUsername(String recipientUsername) {
         this.recipientUsername = recipientUsername;
     }
+
+
+    public String getRecipientSurname() { return recipientSurname; }
+    public void setRecipientSurname(String recipientSurname) { this.recipientSurname = recipientSurname; }
+
+    public String getRecipientLastname() { return recipientLastname; }
+    public void setRecipientLastname(String recipientLastname) { this.recipientLastname = recipientLastname; }
+
+    public int getRecipientAge() { return recipientAge; }
+    public void setRecipientAge(int recipientAge) { this.recipientAge = recipientAge; }
+
 
     public String getDescription() {
         return description;
@@ -140,4 +156,7 @@ public class InseratGetDTO {
     public void setVolunteerAcceptedEmail(String volunteerAcceptedEmail) {
         this.volunteerAcceptedEmail = volunteerAcceptedEmail;
     }
+    public String getWorkType() {return workType;}
+
+    public void setWorkType(String workType) {this.workType = workType;}
 }
