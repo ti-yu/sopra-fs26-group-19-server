@@ -136,6 +136,7 @@ public class UserService {
         }
 
         // Optional fields: only validate if you want them mandatory
+        /*
         if (user.getDateOfBirth() == null) {
             throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
@@ -170,6 +171,8 @@ public class UserService {
                 String.format(baseErrorMessage, "Bio")
             );
         }
+
+         */
     }
 
 
