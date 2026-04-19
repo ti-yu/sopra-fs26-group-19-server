@@ -11,6 +11,8 @@ public class InseratGetDTO {
     private String recipientSurname;
     private String recipientLastname;
     private int recipientAge;
+    private String recipientPhone;
+    private String recipientEmail;
     private String description;
     private String location;
     private Double latitude;
@@ -59,6 +61,12 @@ public class InseratGetDTO {
 
     public int getRecipientAge() { return recipientAge; }
     public void setRecipientAge(int recipientAge) { this.recipientAge = recipientAge; }
+
+    public String getRecipientPhone() { return recipientPhone; }
+    public void setRecipientPhone(String recipientPhone) { this.recipientPhone = recipientPhone; }
+
+    public String getRecipientEmail() { return recipientEmail; }
+    public void setRecipientEmail(String recipientEmail) { this.recipientEmail = recipientEmail; }
 
 
     public String getDescription() {

@@ -51,6 +51,61 @@ public class InseratService {
         return inserats;
     }
 
+    public List<Inserat> getApplicationsByVolunteerId(String volunteerId) {
+        User volunteer = checkUserExists(volunteerId);
+        List<Inserat> inserats = inseratRepository.findByVolunteerAppliedContaining(volunteer);
+        autoFinishPastInserats(inserats);
+        return inserats;
+    }
+
+    public Inserat applyToInserat(String inseratId, String volunteerId) {
+        Inserat inserat = inseratRepository.findById(inseratId).orElseThrow(() ->
+            new ResponseStatusException(HttpStatus.NOT_FOUND, "Inserat not found"));
+        User volunteer = checkUserExists(volunteerId);
+
+        if (!volunteer.getIsVolunteer()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only volunteers can apply to help requests");
+        }
+        if (inserat.getRecipient().getId().equals(volunteerId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You cannot apply to your own help request");
+        }
+        if (inserat.getStatus() != InseratStatus.OPEN) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This help request is no longer open");
+        }
+        if (inserat.getVolunteerApplied().contains(volunteer)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You have already applied to this help request");
+        }
+
+        inserat.getVolunteerApplied().add(volunteer);
+        inseratRepository.save(inserat);
+        inseratRepository.flush();
+        return inserat;
+    }
+
+    public Inserat editInserat(String inseratId, Inserat updatedData) {
+        Inserat inserat = inseratRepository.findById(inseratId).orElseThrow(() ->
+            new ResponseStatusException(HttpStatus.NOT_FOUND, "Inserat not found"));
+
+        if (updatedData.getDescription() != null) inserat.setDescription(updatedData.getDescription());
+        if (updatedData.getLocation() != null) inserat.setLocation(updatedData.getLocation());
+        if (updatedData.getLatitude() != null) inserat.setLatitude(updatedData.getLatitude());
+        if (updatedData.getLongitude() != null) inserat.setLongitude(updatedData.getLongitude());
+        if (updatedData.getDate() != null) inserat.setDate(updatedData.getDate());
+        if (updatedData.getTimeframe() != null) inserat.setTimeframe(updatedData.getTimeframe());
+        if (updatedData.getWorkType() != null) inserat.setWorkType(updatedData.getWorkType());
+        if (updatedData.getTime() != null) inserat.setTime(updatedData.getTime());
+
+        checkValidInseratData(inserat);
+        inseratRepository.save(inserat);
+        inseratRepository.flush();
+        return inserat;
+    }
+
+    public Inserat getInseratById(String inseratId) {
+        return inseratRepository.findById(inseratId).orElseThrow(() ->
+            new ResponseStatusException(HttpStatus.NOT_FOUND, "Inserat not found"));
+    }
+
     public List<User> getApplicants(String inseratId) {
         Inserat inserat = inseratRepository.findById(inseratId).orElseThrow(() ->
             new ResponseStatusException(HttpStatus.NOT_FOUND, "Inserat not found"));

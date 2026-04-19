@@ -32,6 +32,8 @@ public interface DTOMapper {
     @Mapping(source = "recipient.surname", target = "recipientSurname")
     @Mapping(source = "recipient.lastname", target = "recipientLastname")
     @Mapping(source = "recipient.age", target = "recipientAge")
+    @Mapping(source = "recipient.phoneNumber", target = "recipientPhone")
+    @Mapping(source = "recipient.emailAddress", target = "recipientEmail")
     @Mapping(source = "volunteerApplied", target = "volunteerAppliedCount", qualifiedByName = "listSize")
     @Mapping(source = "volunteerAccepted.username", target = "volunteerAcceptedUsername")
     @Mapping(source = "volunteerAccepted.phoneNumber", target = "volunteerAcceptedPhone")

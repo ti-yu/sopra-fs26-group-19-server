@@ -10,4 +10,6 @@ import java.util.List;
 @Repository("inseratRepository")
 public interface InseratRepository extends JpaRepository<Inserat, String> {
     List<Inserat> findByRecipient(User recipient);
+
+    List<Inserat> findByVolunteerAppliedContaining(User volunteer);
 }

@@ -67,6 +67,41 @@ public class InseratController {
         return DTOMapper.INSTANCE.convertEntityToInseratGetDTO(updated);
     }
 
+    @GetMapping("/users/{id}/applications")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public List<InseratGetDTO> getApplicationsByVolunteerId(@PathVariable String id) {
+        List<Inserat> inserats = inseratService.getApplicationsByVolunteerId(id);
+        return inserats.stream()
+            .map(DTOMapper.INSTANCE::convertEntityToInseratGetDTO)
+            .collect(Collectors.toList());
+    }
+
+    @PostMapping("/help-requests/{inseratId}/apply/{volunteerId}")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public InseratGetDTO applyToInserat(@PathVariable String inseratId, @PathVariable String volunteerId) {
+        Inserat updated = inseratService.applyToInserat(inseratId, volunteerId);
+        return DTOMapper.INSTANCE.convertEntityToInseratGetDTO(updated);
+    }
+
+    @GetMapping("/help-requests/{inseratId}")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public InseratGetDTO getInseratById(@PathVariable String inseratId) {
+        Inserat inserat = inseratService.getInseratById(inseratId);
+        return DTOMapper.INSTANCE.convertEntityToInseratGetDTO(inserat);
+    }
+
+    @PutMapping("/help-requests/{inseratId}")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public InseratGetDTO editInserat(@PathVariable String inseratId, @RequestBody InseratPostDTO inseratPostDTO) {
+        Inserat updatedData = DTOMapper.INSTANCE.convertInseratPostDTOtoEntity(inseratPostDTO);
+        Inserat updated = inseratService.editInserat(inseratId, updatedData);
+        return DTOMapper.INSTANCE.convertEntityToInseratGetDTO(updated);
+    }
+
     @GetMapping("/help-requests-map")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
