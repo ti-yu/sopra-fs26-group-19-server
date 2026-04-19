@@ -75,6 +75,9 @@ public class Inserat implements Serializable {
     @Column(nullable = false)
     private String workType;
 
+    @Column
+    private String time;
+
     public String getId() {
         return id;
     }
@@ -182,4 +185,8 @@ public class Inserat implements Serializable {
     public String getWorkType(){return workType;}
 
     public void setWorkType(String workType){this.workType = workType;}
+
+    public String getTime(){return time;}
+
+    public void setTime(String time){this.time = time;}
 }
