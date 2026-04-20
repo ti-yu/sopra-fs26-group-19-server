@@ -98,82 +98,21 @@ public class UserService {
     }
 
     private void checkValidRegistrationData(User user) {
-        String baseErrorMessage = "%s must not be empty. Therefore, the user could not be created!";
+        boolean hasMissingData = isBlank(user.getUsername()) ||
+                isBlank(user.getPassword()) ||
+                isBlank(user.getSurname()) ||
+                isBlank(user.getLastname()) ||
+                isBlank(user.getEmailAddress());
+                // just add other fields if u want them to be mandatory with same logic
 
-        if (isBlank(user.getUsername())) {
+        if (hasMissingData) {
             throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                String.format(baseErrorMessage, "Username")
+                    HttpStatus.BAD_REQUEST,
+                    "One or more mandatory fields are empty. Therefore, the user could not be created!"
             );
         }
-
-        if (isBlank(user.getPassword())) {
-            throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                String.format(baseErrorMessage, "Password")
-            );
-        }
-
-        if (isBlank(user.getSurname())) {
-            throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                String.format(baseErrorMessage, "Surname")
-            );
-        }
-
-        if (isBlank(user.getLastname())) {
-            throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                String.format(baseErrorMessage, "Lastname")
-            );
-        }
-
-        if (isBlank(user.getEmailAddress())) {
-            throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                String.format(baseErrorMessage, "Email address")
-            );
-        }
-
-        // Optional fields: only validate if you want them mandatory
-        /*
-        if (user.getDateOfBirth() == null) {
-            throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                String.format(baseErrorMessage, "Date of birth")
-            );
-        }
-
-        if (isBlank(user.getAddress())) {
-            throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                String.format(baseErrorMessage, "Address")
-            );
-        }
-
-        if (isBlank(user.getGender())) {
-            throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                String.format(baseErrorMessage, "Gender")
-            );
-        }
-
-        if (isBlank(user.getPhoneNumber())) {
-            throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                String.format(baseErrorMessage, "Phone number")
-            );
-        }
-
-        if (isBlank(user.getBio())) {
-            throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                String.format(baseErrorMessage, "Bio")
-            );
-        }
-
-         */
     }
+
 
 
 	/**
@@ -194,17 +133,17 @@ public class UserService {
 
 		if (userByUsername != null && userByEmail != null) {
 			throw new ResponseStatusException(
-				HttpStatus.BAD_REQUEST,
+				HttpStatus.CONFLICT,
 				String.format(baseErrorMessage, "username and email", "are")
 			);
 		} else if (userByUsername != null) {
 			throw new ResponseStatusException(
-				HttpStatus.BAD_REQUEST,
+				HttpStatus.CONFLICT,
 				String.format(baseErrorMessage, "username", "is")
 			);
 		} else if (userByEmail != null) {
 			throw new ResponseStatusException(
-				HttpStatus.BAD_REQUEST,
+				HttpStatus.CONFLICT,
 				String.format(baseErrorMessage, "email", "is")
 			);
 		}
