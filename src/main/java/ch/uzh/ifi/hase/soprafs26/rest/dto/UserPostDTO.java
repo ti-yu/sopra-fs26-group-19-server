@@ -1,7 +1,12 @@
 package ch.uzh.ifi.hase.soprafs26.rest.dto;
 
 import java.time.LocalDate;
+import lombok.Getter;
+import lombok.Setter;
 
+
+@Getter
+@Setter
 public class UserPostDTO {
 
     private String username;
@@ -16,96 +21,4 @@ public class UserPostDTO {
     private String gender;
     private String phoneNumber;
     private LocalDate dateOfBirth;
-
-    // --- getters & setters ---
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getSurname() {
-        return surname;
-    }
-
-    public void setSurname(String surname) {
-        this.surname = surname;
-    }
-
-    public String getLastname() {
-        return lastname;
-    }
-
-    public void setLastname(String lastname) {
-        this.lastname = lastname;
-    }
-
-    public String getEmailAddress() {
-        return emailAddress;
-    }
-
-    public void setEmailAddress(String emailAddress) {
-        this.emailAddress = emailAddress;
-    }
-
-    // Using getIsVolunteer/setIsVolunteer so Jackson maps JSON "isVolunteer" correctly.
-    // The isVolunteer() getter convention would make Jackson look for "volunteer" instead.
-    public boolean getIsVolunteer() {
-        return isVolunteer;
-    }
-
-    public void setIsVolunteer(boolean isVolunteer) {
-        this.isVolunteer = isVolunteer;
-    }
-
-    public String getBio() {
-        return bio;
-    }
-
-    public void setBio(String bio) {
-        this.bio = bio;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public String getGender() {
-        return gender;
-    }
-
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
-    public LocalDate getDateOfBirth() {
-        return dateOfBirth;
-    }
-
-    public void setDateOfBirth(LocalDate dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
-    }
 }
