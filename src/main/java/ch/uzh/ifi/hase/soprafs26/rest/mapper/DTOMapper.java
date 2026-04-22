@@ -13,6 +13,8 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.InseratPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.ApplicantDTO;
 
 import java.util.List;
+import java.time.LocalDate;
+import java.time.Period;
 
 @Mapper
 public interface DTOMapper {
@@ -31,14 +33,29 @@ public interface DTOMapper {
     @Mapping(source = "recipient.username", target = "recipientUsername")
     @Mapping(source = "recipient.surname", target = "recipientSurname")
     @Mapping(source = "recipient.lastname", target = "recipientLastname")
-    @Mapping(source = "recipient.age", target = "recipientAge")
+    @Mapping(target = "recipientAge", ignore = true)
     @Mapping(source = "recipient.phoneNumber", target = "recipientPhone")
     @Mapping(source = "recipient.emailAddress", target = "recipientEmail")
-    @Mapping(source = "volunteerApplied", target = "volunteerAppliedCount", qualifiedByName = "listSize")
+    @Mapping(target = "volunteerAppliedCount", ignore= true)
     @Mapping(source = "volunteerAccepted.username", target = "volunteerAcceptedUsername")
     @Mapping(source = "volunteerAccepted.phoneNumber", target = "volunteerAcceptedPhone")
     @Mapping(source = "volunteerAccepted.emailAddress", target = "volunteerAcceptedEmail")
     InseratGetDTO convertEntityToInseratGetDTO(Inserat inserat);
+
+    @AfterMapping
+    default void fillComputedFields(Inserat inserat, @MappingTarget InseratGetDTO dto) {
+        // volunteer count
+        if (inserat.getVolunteerApplied() != null) {
+            dto.setVolunteerAppliedCount(inserat.getVolunteerApplied().size());
+        }
+
+        // recipient age
+        if (inserat.getRecipient() != null && inserat.getRecipient().getDateOfBirth() != null) {
+            LocalDate dob = inserat.getRecipient().getDateOfBirth();
+            int age = Period.between(dob, LocalDate.now()).getYears();
+            dto.setRecipientAge(age);
+        }
+    }
 
     ApplicantDTO convertEntityToApplicantDTO(User user);
 
