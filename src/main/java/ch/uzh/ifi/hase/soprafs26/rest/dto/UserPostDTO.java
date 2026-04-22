@@ -14,8 +14,7 @@ public class UserPostDTO {
     private String surname;
     private String lastname;
     private String emailAddress;
-    private boolean isVolunteer;
-
+    private Boolean volunteer;
     private String bio;
     private String address;
     private String gender;
