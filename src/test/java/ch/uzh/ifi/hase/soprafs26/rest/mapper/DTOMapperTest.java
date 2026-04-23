@@ -26,7 +26,7 @@ public class DTOMapperTest {
         userPostDTO.setSurname("John");
         userPostDTO.setLastname("Doe");
         userPostDTO.setEmailAddress("john@example.com");
-        userPostDTO.setVolunteer(true);
+        userPostDTO.setisVolunteer(true);
         userPostDTO.setBio("A bio");
         userPostDTO.setAddress("Test Street 1");
         userPostDTO.setGender("male");
@@ -42,7 +42,7 @@ public class DTOMapperTest {
         assertEquals("John", user.getSurname());
         assertEquals("Doe", user.getLastname());
         assertEquals("john@example.com", user.getEmailAddress());
-        assertEquals(true, user.getVolunteer());
+        assertEquals(true, user.getisVolunteer());
         assertEquals("A bio", user.getBio());
     }
 
@@ -55,7 +55,7 @@ public class DTOMapperTest {
         user.setSurname("John");
         user.setLastname("Doe");
         user.setEmailAddress("john@example.com");
-        user.setVolunteer(false);
+        user.setisVolunteer(false);
         user.setBio("A bio");
         user.setGender("male");
         user.setToken("test-token");
@@ -70,7 +70,7 @@ public class DTOMapperTest {
         assertEquals("John", userGetDTO.getSurname());
         assertEquals("Doe", userGetDTO.getLastname());
         assertEquals("john@example.com", userGetDTO.getEmailAddress());
-        assertEquals(false, userGetDTO.getVolunteer());
+        assertEquals(false, userGetDTO.getisVolunteer());
         assertEquals("A bio", userGetDTO.getBio());
         assertEquals("test-token", userGetDTO.getToken());
     }
