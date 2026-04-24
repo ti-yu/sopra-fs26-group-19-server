@@ -6,6 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.entity.User;
@@ -52,6 +53,27 @@ public class UserServiceTest {
     }
 
     @Test
+    public void getUserById_success() {
+        //when
+        Mockito.when(userRepository.findById("1")).thenReturn(java.util.Optional.of(testUser));
+
+        //when
+        User foundUser = userService.getUserById("1");
+
+        //then
+        assertEquals(testUser.getUsername(), foundUser.getUsername());
+    }
+
+    @Test
+    public void getUserById_notFound_throwsException() {
+        // given
+        Mockito.when(userRepository.findById("invalid-id")).thenReturn(java.util.Optional.empty());
+
+        // then
+        assertThrows(ResponseStatusException.class, () -> userService.getUserById("invalid-id"));
+    }
+
+    @Test
     public void createUser_validInputs_success() {
         // createUser flow: checkIfUserExists (findByUsername + findByEmailAddress)
         // → save → loginUser (findByUsername again to verify user exists).
@@ -73,6 +95,20 @@ public class UserServiceTest {
     }
 
     @Test
+    public void createUser_missingMandatoryData_throwsBadRequest() {
+        // given: a user missing a mandatory field (username is null)
+        User invalidUser = new User();
+        invalidUser.setPassword("password");
+        invalidUser.setSurname("John");
+        invalidUser.setLastname("Doe");
+        invalidUser.setEmailAddress("john@email.com");
+
+        // then
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> userService.createUser(invalidUser));
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+    }
+
+    @Test
     public void createUser_duplicateUsername_throwsException() {
         // given: a user with the same username already exists
         Mockito.when(userRepository.findByUsername("testUser")).thenReturn(testUser);
@@ -90,6 +126,17 @@ public class UserServiceTest {
 
         // then: creating a user with a duplicate email throws an exception
         assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser));
+    }
+
+    @Test
+    public void createUser_duplicateUsernameAndEmail_throwsConflict() {
+        // given: usernamee and email exist
+        Mockito.when(userRepository.findByUsername(Mockito.anyString())).thenReturn(testUser);
+        Mockito.when(userRepository.findByEmailAddress(Mockito.anyString())).thenReturn(testUser);
+
+        // then
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser));
+        assertTrue(exception.getReason().contains("username and email"));
     }
 
     @Test
@@ -123,6 +170,17 @@ public class UserServiceTest {
     }
 
     @Test
+    public void loginUser_missingData_throwsBadRequest() {
+        //gien: missing password
+        User invalidLogin = new User();
+        invalidLogin.setUsername("testUser");
+
+        //then
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> userService.loginUser(invalidLogin));
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+    }
+
+    @Test
     public void loginUser_nonExistentUser_throwsException() {
         // given: no user with this username exists
         Mockito.when(userRepository.findByUsername("ghostUser")).thenReturn(null);
@@ -133,5 +191,52 @@ public class UserServiceTest {
 
         // then: login with non-existent username throws NOT_FOUND
         assertThrows(ResponseStatusException.class, () -> userService.loginUser(loginInput));
+    }
+
+    @Test
+    public void updateUser_validInputs_success() {
+        //given user exist in db
+        testUser.setId("1");
+        Mockito.when(userRepository.findById("1")).thenReturn(java.util.Optional.of(testUser));
+
+        // No conflicts
+        Mockito.when(userRepository.findByUsername("newUsername")).thenReturn(null);
+        Mockito.when(userRepository.findByEmailAddress("new@email.com")).thenReturn(null);
+
+        // User input with changes
+        User updateInput = new User();
+        updateInput.setUsername("newUsername");
+        updateInput.setEmailAddress("new@email.com");
+        updateInput.setBio("Updated bio");
+
+        // when
+        userService.updateUser("1", updateInput);
+
+        // then
+        Mockito.verify(userRepository, Mockito.times(1)).save(testUser);
+        assertEquals("newUsername", testUser.getUsername());
+        assertEquals("new@email.com", testUser.getEmailAddress());
+        assertEquals("Updated bio", testUser.getBio());
+    }
+
+    @Test
+    public void updateUser_duplicateUsername_throwsConflict() {
+        // given
+        testUser.setId("1");
+        Mockito.when(userRepository.findById("1")).thenReturn(java.util.Optional.of(testUser));
+
+        // another user holds the username we want
+        User otherUser = new User();
+        otherUser.setId("2");
+        otherUser.setUsername("takenUsername");
+        Mockito.when(userRepository.findByUsername("takenUsername")).thenReturn(otherUser);
+
+        User updateInput = new User();
+        updateInput.setUsername("takenUsername");
+
+        // then
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> userService.updateUser("1", updateInput));
+        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+        assertTrue(exception.getReason().contains("Username is already taken"));
     }
 }
