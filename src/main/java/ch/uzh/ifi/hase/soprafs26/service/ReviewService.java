@@ -53,6 +53,7 @@ public class ReviewService {
         User receiver = checkUserExists(receiverId);
         return reviewRepository.findByReceiver(receiver);
     }
+
     public Review acceptedInseratCreateReview(User sender, User receiver, Inserat inserat) {
         Review review = new Review();
         review.setSender(sender);
@@ -74,14 +75,16 @@ public class ReviewService {
     }
 
 
-    private void updateReviewStatusBasedOnObjective(Review review) {
+    public ReviewStatus updateReviewStatusBasedOnObjective(Review review) {
         if (review.isFinished()) {
-            return;
+            return review.getReviewStatus();
         }
 
         if (review.getReviewStatus() == ReviewStatus.IGNORED) {
             review.setFinished(true);
-            return;
+            reviewRepository.save(review);
+            reviewRepository.flush();
+            return review.getReviewStatus();
         }
 
         LocalDate currentDate = LocalDate.now();
@@ -112,6 +115,7 @@ public class ReviewService {
 
         reviewRepository.save(review);
         reviewRepository.flush();
+        return review.getReviewStatus();
     }
 
     public Review userIgnoresReview(String reviewId) {
@@ -153,4 +157,14 @@ public class ReviewService {
         return review;
     }
 
+    public Inserat reviewPopupNecessary(User user) {
+        List<Review> reviewList = reviewRepository.findBySender(user);
+        for (Review review : reviewList) {
+            updateReviewStatusBasedOnObjective(review);
+            if (review.getReviewStatus() == ReviewStatus.PENDING) {
+                return review.getInserat();
+            }
+        }
+        return null;
+    }
 }
