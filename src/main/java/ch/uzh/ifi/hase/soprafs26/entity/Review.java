@@ -25,6 +25,10 @@ public class Review implements Serializable {
     @JoinColumn(name = "receiver_id", nullable = false)
     private User receiver;
 
+    @ManyToOne
+    @JoinColumn(name = "inserat_id", nullable = false)
+    private Inserat inserat;
+
     @Column(nullable = false)
     private LocalDate creationDate;
 
@@ -60,6 +64,14 @@ public class Review implements Serializable {
 
     public void setReceiver(User receiver) {
         this.receiver = receiver;
+    }
+
+    public Inserat getInserat() {
+        return inserat;
+    }
+
+    public void setInserat(Inserat inserat) {
+        this.inserat = inserat;
     }
 
     public LocalDate getCreationDate() {

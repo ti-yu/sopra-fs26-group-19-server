@@ -26,13 +26,16 @@ public class InseratService {
 
     private final InseratRepository inseratRepository;
     private final UserRepository userRepository;
+    private final ReviewService reviewService;
 
     public InseratService(
         @Qualifier("inseratRepository") InseratRepository inseratRepository,
-        @Qualifier("userRepository") UserRepository userRepository
+        @Qualifier("userRepository") UserRepository userRepository,
+        ReviewService reviewService
     ) {
         this.inseratRepository = inseratRepository;
         this.userRepository = userRepository;
+        this.reviewService = reviewService;
     }
 
     private User checkUserExists(String recipientId) {
@@ -125,6 +128,11 @@ public class InseratService {
         inserat.setStatus(InseratStatus.ACCEPTED);
         inseratRepository.save(inserat);
         inseratRepository.flush();
+
+        User recipient = inserat.getRecipient();
+        reviewService.acceptedInseratCreateReview(volunteer, recipient, inserat);
+        reviewService.acceptedInseratCreateReview(recipient, volunteer, inserat);
+
         return inserat;
     }
 
