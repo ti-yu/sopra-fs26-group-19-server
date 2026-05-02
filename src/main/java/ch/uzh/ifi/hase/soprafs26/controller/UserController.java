@@ -1,22 +1,32 @@
 package ch.uzh.ifi.hase.soprafs26.controller;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import ch.uzh.ifi.hase.soprafs26.entity.Review;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.ReviewGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.ReviewPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPutDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
+import ch.uzh.ifi.hase.soprafs26.service.ReviewService;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 public class UserController {
 
     private final UserService userService;
+    private final ReviewService reviewService;
 
-    UserController(UserService userService) {
+    UserController(UserService userService, ReviewService reviewService) {
         this.userService = userService;
+        this.reviewService = reviewService;
     }
 
     @GetMapping("/profile/{id}")
@@ -25,6 +35,17 @@ public class UserController {
     public UserGetDTO getUserById(@PathVariable String id) {
         User user = userService.getUserById(id);
         return DTOMapper.INSTANCE.convertEntityToUserGetDTO(user);
+    }
+
+    @GetMapping("/profile/{id}/pendingReview")
+    @ResponseBody
+    public ResponseEntity<ReviewGetDTO> getPendingReview(@PathVariable String id) {
+        User user = userService.getUserById(id);
+        Review review = reviewService.reviewPopupNecessary(user);
+        if (review == null) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(DTOMapper.INSTANCE.convertEntityToReviewGetDTO(review));
     }
 
     @PostMapping("/register")
@@ -45,25 +66,12 @@ public class UserController {
         return DTOMapper.INSTANCE.convertEntityToUserGetDTO(authorizedUser);
     }
 
-
     @PutMapping("/profile/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ResponseBody
     public void updateUser(@PathVariable String id, @RequestBody UserPutDTO userPutDTO) {
         User userInput = DTOMapper.INSTANCE.convertUserPutDTOtoEntity(userPutDTO);
         userService.updateUser(id, userInput);
-    }
-
-    @GetMapping("/profile/{id}/pendingReview")
-    @ResponseStatus(HttpStatus.OK)
-    @ResponseBody
-    public ReviewGetDTO getPendingReview(@PathVariable String id) {
-        User user = userService.getUserById(id);
-        Review review = reviewService.reviewPopupNecessary(user);
-        if (review == null) {
-            return null;  // or return 204 No Content — see below
-        }
-        return DTOMapper.INSTANCE.convertEntityToReviewGetDTO(review);
     }
 
     @PostMapping("/profile/{id}/reviews/{reviewId}/write")
@@ -92,6 +100,4 @@ public class UserController {
             .map(DTOMapper.INSTANCE::convertEntityToReviewGetDTO)
             .collect(Collectors.toList());
     }
-
-
 }

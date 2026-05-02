@@ -10,7 +10,6 @@ import java.util.UUID;
 import java.time.Period;
 
 
-
 @Entity
 @Table(name = "users")
 public class User implements Serializable {
