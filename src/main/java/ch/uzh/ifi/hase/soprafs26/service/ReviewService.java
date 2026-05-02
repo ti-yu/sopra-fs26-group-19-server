@@ -167,4 +167,16 @@ public class ReviewService {
         }
         return null;
     }
+
+    public List<Review> fetchDoneReviews(User user) {
+        List<Review> reviewList = reviewRepository.findBySender(user);
+        List<Review> doneReviews = new ArrayList<>();
+        for (Review review : reviewList) {
+            updateReviewStatusBasedOnObjective(review);
+            if (review.isFinished()) {
+                doneReviews.add(review);
+            }
+        }
+        return doneReviews;
+    }
 }

@@ -5,12 +5,15 @@ import org.mapstruct.factory.Mappers;
 
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.entity.Inserat;
+import ch.uzh.ifi.hase.soprafs26.entity.Review;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPutDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.InseratGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.InseratPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.ApplicantDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.ReviewGetDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.ReviewPostDTO;
 
 import java.util.List;
 import java.time.LocalDate;
@@ -44,12 +47,10 @@ public interface DTOMapper {
 
     @AfterMapping
     default void fillComputedFields(Inserat inserat, @MappingTarget InseratGetDTO dto) {
-        // volunteer count
         if (inserat.getVolunteerApplied() != null) {
             dto.setVolunteerAppliedCount(inserat.getVolunteerApplied().size());
         }
 
-        // recipient age
         if (inserat.getRecipient() != null && inserat.getRecipient().getDateOfBirth() != null) {
             LocalDate dob = inserat.getRecipient().getDateOfBirth();
             int age = Period.between(dob, LocalDate.now()).getYears();
@@ -58,6 +59,13 @@ public interface DTOMapper {
     }
 
     ApplicantDTO convertEntityToApplicantDTO(User user);
+
+    @Mapping(source = "receiver.username", target = "receiverUsername")
+    @Mapping(source = "inserat.description", target = "inseratDescription")
+    @Mapping(source = "inserat.location", target = "inseratLocation")
+    ReviewGetDTO convertEntityToReviewGetDTO(Review review);
+
+    Review convertReviewPostDTOtoEntity(ReviewPostDTO reviewPostDTO);
 
     @Named("listSize")
     default int listSize(List<?> list) {

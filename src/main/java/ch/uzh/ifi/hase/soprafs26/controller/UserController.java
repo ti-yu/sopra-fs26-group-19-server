@@ -53,4 +53,45 @@ public class UserController {
         User userInput = DTOMapper.INSTANCE.convertUserPutDTOtoEntity(userPutDTO);
         userService.updateUser(id, userInput);
     }
+
+    @GetMapping("/profile/{id}/pendingReview")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public ReviewGetDTO getPendingReview(@PathVariable String id) {
+        User user = userService.getUserById(id);
+        Review review = reviewService.reviewPopupNecessary(user);
+        if (review == null) {
+            return null;  // or return 204 No Content — see below
+        }
+        return DTOMapper.INSTANCE.convertEntityToReviewGetDTO(review);
+    }
+
+    @PostMapping("/profile/{id}/reviews/{reviewId}/write")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public ReviewGetDTO writeReview(@PathVariable String reviewId, @RequestBody ReviewPostDTO dto) {
+        Review review = reviewService.userWritesReview(reviewId, dto.getText());
+        return DTOMapper.INSTANCE.convertEntityToReviewGetDTO(review);
+    }
+
+    @PostMapping("/profile/{id}/reviews/{reviewId}/ignore")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public ReviewGetDTO ignoreReview(@PathVariable String reviewId) {
+        Review review = reviewService.userIgnoresReview(reviewId);
+        return DTOMapper.INSTANCE.convertEntityToReviewGetDTO(review);
+    }
+
+    @GetMapping("/profile/{id}/reviews/done")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public List<ReviewGetDTO> getDoneReviews(@PathVariable String id) {
+        User user = userService.getUserById(id);
+        List<Review> reviews = reviewService.fetchDoneReviews(user);
+        return reviews.stream()
+            .map(DTOMapper.INSTANCE::convertEntityToReviewGetDTO)
+            .collect(Collectors.toList());
+    }
+
+
 }
