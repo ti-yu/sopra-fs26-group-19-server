@@ -100,4 +100,15 @@ public class UserController {
             .map(DTOMapper.INSTANCE::convertEntityToReviewGetDTO)
             .collect(Collectors.toList());
     }
+
+    @GetMapping("/profile/{id}/reviews/received")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public List<ReviewGetDTO> getReceivedReviews(@PathVariable String id) {
+        User user = userService.getUserById(id);
+        List<Review> reviews = reviewService.fetchReceivedReviews(user);
+        return reviews.stream()
+                .map(DTOMapper.INSTANCE::convertEntityToReviewGetDTO)
+                .collect(Collectors.toList());
+    }
 }
