@@ -85,6 +85,21 @@ public class InseratService {
         return inserat;
     }
 
+    public Inserat unapplyFromInserat(String inseratId, String volunteerId) {
+        Inserat inserat = inseratRepository.findById(inseratId).orElseThrow(() ->
+            new ResponseStatusException(HttpStatus.NOT_FOUND, "Inserat not found"));
+        User volunteer = checkUserExists(volunteerId);
+
+        if (!inserat.getVolunteerApplied().contains(volunteer)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You have not applied to this help request");
+        }
+
+        inserat.getVolunteerApplied().remove(volunteer);
+        inseratRepository.save(inserat);
+        inseratRepository.flush();
+        return inserat;
+    }
+
     public Inserat editInserat(String inseratId, Inserat updatedData) {
         Inserat inserat = inseratRepository.findById(inseratId).orElseThrow(() ->
             new ResponseStatusException(HttpStatus.NOT_FOUND, "Inserat not found"));

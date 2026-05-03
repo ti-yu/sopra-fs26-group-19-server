@@ -39,7 +39,8 @@ public interface DTOMapper {
     @Mapping(target = "recipientAge", ignore = true)
     @Mapping(source = "recipient.phoneNumber", target = "recipientPhone")
     @Mapping(source = "recipient.emailAddress", target = "recipientEmail")
-    @Mapping(target = "volunteerAppliedCount", ignore= true)
+    @Mapping(target = "volunteerAppliedCount", ignore = true)
+    @Mapping(target = "volunteerAppliedIds", ignore = true)
     @Mapping(source = "volunteerAccepted.username", target = "volunteerAcceptedUsername")
     @Mapping(source = "volunteerAccepted.phoneNumber", target = "volunteerAcceptedPhone")
     @Mapping(source = "volunteerAccepted.emailAddress", target = "volunteerAcceptedEmail")
@@ -49,6 +50,9 @@ public interface DTOMapper {
     default void fillComputedFields(Inserat inserat, @MappingTarget InseratGetDTO dto) {
         if (inserat.getVolunteerApplied() != null) {
             dto.setVolunteerAppliedCount(inserat.getVolunteerApplied().size());
+            dto.setVolunteerAppliedIds(inserat.getVolunteerApplied().stream()
+                .map(User::getId)
+                .collect(java.util.stream.Collectors.toList()));
         }
 
         if (inserat.getRecipient() != null && inserat.getRecipient().getDateOfBirth() != null) {

@@ -2,6 +2,7 @@ package ch.uzh.ifi.hase.soprafs26.rest.dto;
 
 import ch.uzh.ifi.hase.soprafs26.constant.InseratStatus;
 import java.time.LocalDate;
+import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -23,9 +24,11 @@ public class InseratGetDTO {
     private Double longitude;
     private LocalDate date;
     private String timeframe;
+    private String time;
     private InseratStatus status;
     private LocalDate creationDate;
     private int volunteerAppliedCount;
+    private List<String> volunteerAppliedIds;
     private String volunteerAcceptedUsername;
     private String volunteerAcceptedPhone;
     private String volunteerAcceptedEmail;

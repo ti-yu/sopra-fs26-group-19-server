@@ -85,6 +85,14 @@ public class InseratController {
         return DTOMapper.INSTANCE.convertEntityToInseratGetDTO(updated);
     }
 
+    @DeleteMapping("/help-requests/{inseratId}/apply/{volunteerId}")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public InseratGetDTO unapplyFromInserat(@PathVariable String inseratId, @PathVariable String volunteerId) {
+        Inserat updated = inseratService.unapplyFromInserat(inseratId, volunteerId);
+        return DTOMapper.INSTANCE.convertEntityToInseratGetDTO(updated);
+    }
+
     @GetMapping("/help-requests/{inseratId}")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
