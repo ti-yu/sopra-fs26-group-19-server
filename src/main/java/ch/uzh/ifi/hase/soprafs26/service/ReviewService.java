@@ -16,6 +16,8 @@ import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 import ch.uzh.ifi.hase.soprafs26.entity.Inserat;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -64,7 +66,7 @@ public class ReviewService {
         review.setText("");                       // placeholder, filled in when sender writes it
         review.setReviewStatus(ReviewStatus.HASNOTHAPPENED);
 
-        updateReviewStatusBasedOnObjective(review)
+        updateReviewStatusBasedOnObjective(review);
 
         review = reviewRepository.save(review);
         reviewRepository.flush();
@@ -92,7 +94,10 @@ public class ReviewService {
 
         Inserat inserat = review.getInserat();
         LocalDate inseratDate = inserat.getDate();
-        LocalTime inseratTime = inserat.getTime();
+        LocalTime inseratTime = null;
+        if (inserat.getTime() != null && !inserat.getTime().trim().isEmpty()) {
+            inseratTime = LocalTime.parse(inserat.getTime());
+        }
 
 
         if (review.getText() != null && !review.getText().isEmpty()) {
@@ -157,12 +162,12 @@ public class ReviewService {
         return review;
     }
 
-    public Inserat reviewPopupNecessary(User user) {
+    public Review reviewPopupNecessary(User user) {
         List<Review> reviewList = reviewRepository.findBySender(user);
         for (Review review : reviewList) {
             updateReviewStatusBasedOnObjective(review);
             if (review.getReviewStatus() == ReviewStatus.PENDING) {
-                return review.getInserat();
+                return review;
             }
         }
         return null;
