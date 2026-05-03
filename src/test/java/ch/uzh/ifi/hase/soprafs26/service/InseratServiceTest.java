@@ -34,6 +34,9 @@ public class InseratServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private ReviewService reviewService;
+
     @InjectMocks
     private InseratService inseratService;
 
