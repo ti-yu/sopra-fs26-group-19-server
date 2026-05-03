@@ -184,4 +184,16 @@ public class ReviewService {
         }
         return doneReviews;
     }
+
+    public List<Review> fetchReceivedReviews(User user) {
+        List<Review> reviewList = reviewRepository.findByReceiver(user);
+        List<Review> receivedReviews = new ArrayList<>();
+        for (Review review : reviewList) {
+            // We only want to show reviews that were actually written
+            if (review.getReviewStatus() == ReviewStatus.WRITTEN) {
+                receivedReviews.add(review);
+            }
+        }
+        return receivedReviews;
+    }
 }
