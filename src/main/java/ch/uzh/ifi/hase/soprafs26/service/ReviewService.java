@@ -165,8 +165,11 @@ public class ReviewService {
     public Review reviewPopupNecessary(User user) {
         List<Review> reviewList = reviewRepository.findBySender(user);
         for (Review review : reviewList) {
-            updateReviewStatusBasedOnObjective(review);
-            if (review.getReviewStatus() == ReviewStatus.PENDING) {
+            // TESTING MODE: show popup immediately on session start for any unfinished review.
+            // To switch to timing-based behaviour (show after inserat ends), replace this block with:
+            //   updateReviewStatusBasedOnObjective(review);
+            //   if (review.getReviewStatus() == ReviewStatus.PENDING) { return review; }
+            if (!review.isFinished() && review.getReviewStatus() != ReviewStatus.IGNORED) {
                 return review;
             }
         }
