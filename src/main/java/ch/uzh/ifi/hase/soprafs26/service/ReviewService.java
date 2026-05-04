@@ -106,7 +106,7 @@ public class ReviewService {
         } else if (inseratDate.isAfter(currentDate)) {
             review.setReviewStatus(ReviewStatus.HASNOTHAPPENED);
         } else if (inseratDate.isEqual(currentDate)) {
-            if (inseratTime != null && inseratTime.isAfter(currentTime.plusHours(1))) {
+            if (inseratTime != null && inseratTime.isAfter(currentTime.plusHours(0))) {
                 review.setReviewStatus(ReviewStatus.HASNOTHAPPENED);
             } else {
                 review.setReviewStatus(ReviewStatus.PENDING);
