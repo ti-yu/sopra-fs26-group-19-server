@@ -317,14 +317,14 @@ public class InseratServiceTest {
     }
 
     @Test
-    public void getAllInserats_filtersOutNullCoordinates() {
+    public void getOpenInserats_filtersOutNullCoordinates() {
         Inserat noCoords = new Inserat();
         noCoords.setId("no-coords");
         noCoords.setLatitude(null);
         noCoords.setLongitude(null);
         Mockito.when(inseratRepository.findAll()).thenReturn(Arrays.asList(inserat, noCoords));
 
-        List<Inserat> result = inseratService.getAllInserats();
+        List<Inserat> result = inseratService.getOpenInserats();
         assertEquals(1, result.size());
         assertEquals("inserat-1", result.get(0).getId());
     }

@@ -211,8 +211,8 @@ public class InseratControllerTest {
     }
 
     @Test
-    public void getAllInserats_returnsMapList() throws Exception {
-        given(inseratService.getAllInserats()).willReturn(List.of(createInserat()));
+    public void getOpenInserats_returnsMapList() throws Exception {
+        given(inseratService.getOpenInserats()).willReturn(List.of(createInserat()));
 
         mockMvc.perform(get("/help-requests-map"))
             .andExpect(status().isOk())
