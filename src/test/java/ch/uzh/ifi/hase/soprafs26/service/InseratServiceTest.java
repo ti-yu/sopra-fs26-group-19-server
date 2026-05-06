@@ -322,7 +322,10 @@ public class InseratServiceTest {
         noCoords.setId("no-coords");
         noCoords.setLatitude(null);
         noCoords.setLongitude(null);
-        Mockito.when(inseratRepository.findAll()).thenReturn(Arrays.asList(inserat, noCoords));
+        inserat.setStatus(InseratStatus.OPEN); // your valid one
+
+        Mockito.when(inseratRepository.findByStatus(InseratStatus.OPEN))
+            .thenReturn(Arrays.asList(inserat, noCoords));
 
         List<Inserat> result = inseratService.getOpenInserats();
         assertEquals(1, result.size());
