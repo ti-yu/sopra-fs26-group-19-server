@@ -113,8 +113,8 @@ public class InseratController {
     @GetMapping("/help-requests-map")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public List<InseratGetDTO> getAllInserats() {
-        List<Inserat> inserats = inseratService.getAllInserats();
+    public List<InseratGetDTO> getopenInserats() {
+        List<Inserat> inserats = inseratService.getOpenInserats();
         return inserats.stream()
             .map(DTOMapper.INSTANCE::convertEntityToInseratGetDTO)
             .collect(Collectors.toList());

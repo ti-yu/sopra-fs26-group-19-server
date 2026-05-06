@@ -229,8 +229,8 @@ public class InseratService {
     }
 
 
-    public List<Inserat> getAllInserats() {
-    return inseratRepository.findAll().stream()
+    public List<Inserat> getOpenInserats() {
+    return inseratRepository.findByStatus(InseratStatus.OPEN).stream()
         .filter(inserat -> inserat.getLatitude() != null && inserat.getLongitude() != null)
         .collect(Collectors.toList());
     }
