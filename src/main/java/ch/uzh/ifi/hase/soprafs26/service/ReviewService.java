@@ -17,6 +17,7 @@ import ch.uzh.ifi.hase.soprafs26.entity.Inserat;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +29,7 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
+    private static final ZoneId ZURICH_ZONE = ZoneId.of("Europe/Zurich");
 
     public ReviewService(
         @Qualifier("reviewRepository") ReviewRepository reviewRepository,
@@ -61,7 +63,7 @@ public class ReviewService {
         review.setSender(sender);
         review.setReceiver(receiver);
         review.setInserat(inserat);
-        review.setCreationDate(LocalDate.now());
+        review.setCreationDate(LocalDate.now(ZURICH_ZONE));
         review.setFinished(false);
         review.setText("");                       // placeholder, filled in when sender writes it
         review.setReviewStatus(ReviewStatus.HASNOTHAPPENED);
@@ -89,8 +91,8 @@ public class ReviewService {
             return review.getReviewStatus();
         }
 
-        LocalDate currentDate = LocalDate.now();
-        LocalTime currentTime = LocalTime.now();
+        LocalDate currentDate = LocalDate.now(ZURICH_ZONE);
+        LocalTime currentTime = LocalTime.now(ZURICH_ZONE);
 
         Inserat inserat = review.getInserat();
         LocalDate inseratDate = inserat.getDate();

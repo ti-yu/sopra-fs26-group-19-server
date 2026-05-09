@@ -18,6 +18,7 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.ReviewPostDTO;
 import java.util.List;
 import java.time.LocalDate;
 import java.time.Period;
+import java.time.ZoneId;
 
 @Mapper
 public interface DTOMapper {
@@ -57,7 +58,7 @@ public interface DTOMapper {
 
         if (inserat.getRecipient() != null && inserat.getRecipient().getDateOfBirth() != null) {
             LocalDate dob = inserat.getRecipient().getDateOfBirth();
-            int age = Period.between(dob, LocalDate.now()).getYears();
+            int age = Period.between(dob, LocalDate.now(ZoneId.of("Europe/Zurich"))).getYears();
             dto.setRecipientAge(age);
         }
     }

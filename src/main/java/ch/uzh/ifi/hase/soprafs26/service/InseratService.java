@@ -15,6 +15,7 @@ import ch.uzh.ifi.hase.soprafs26.repository.InseratRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -169,7 +170,7 @@ public class InseratService {
     }
 
     private void autoFinishPastInserats(List<Inserat> inserats) {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(ZoneId.of("Europe/Zurich"));
         for (Inserat inserat : inserats) {
             if (inserat.getDate().isBefore(today)
                     && inserat.getStatus() != InseratStatus.DONE) {

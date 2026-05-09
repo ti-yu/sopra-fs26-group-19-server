@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -66,7 +67,7 @@ public class Inserat implements Serializable {
     private InseratStatus status = InseratStatus.OPEN;
 
     @Column(nullable = false)
-    private LocalDate creationDate = LocalDate.now();
+    private LocalDate creationDate = LocalDate.now(ZoneId.of("Europe/Zurich"));
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
