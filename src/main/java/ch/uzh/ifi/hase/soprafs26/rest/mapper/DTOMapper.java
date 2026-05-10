@@ -65,6 +65,7 @@ public interface DTOMapper {
 
     ApplicantDTO convertEntityToApplicantDTO(User user);
 
+    @Mapping(source = "receiver.id", target = "receiverId")
     @Mapping(source = "receiver.username", target = "receiverUsername")
     @Mapping(source = "inserat.description", target = "inseratDescription")
     @Mapping(source = "inserat.location", target = "inseratLocation")
