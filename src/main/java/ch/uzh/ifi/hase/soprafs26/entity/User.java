@@ -47,7 +47,7 @@ public class User implements Serializable {
     @Column(length = 2000)
     private String bio;
 
-    @Column
+    @Column(columnDefinition = "TEXT")
     private String profilePicture;
 
     @Column

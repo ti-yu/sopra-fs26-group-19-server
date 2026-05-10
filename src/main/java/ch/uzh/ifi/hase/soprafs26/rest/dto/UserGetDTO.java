@@ -17,6 +17,7 @@ public class UserGetDTO {
     private String phoneNumber;
     private String address;
     private String bio;
+    private String profilePicture;
     private LocalDate dateOfBirth;
     private int age;
     private String gender;

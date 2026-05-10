@@ -233,6 +233,10 @@ public class UserService {
             existingUser.setBio(userInput.getBio().trim());
         }
 
+        if (userInput.getProfilePicture() != null) {
+            existingUser.setProfilePicture(userInput.getProfilePicture());
+        }
+
         if (!isBlank(userInput.getAddress())) {
             existingUser.setAddress(userInput.getAddress().trim());
         }

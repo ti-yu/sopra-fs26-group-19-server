@@ -15,6 +15,7 @@ public class UserPutDTO {
     private String emailAddress;
     private Boolean isVolunteer;
     private String bio;
+    private String profilePicture;
     private String address;
     private String gender;
     private String phoneNumber;
