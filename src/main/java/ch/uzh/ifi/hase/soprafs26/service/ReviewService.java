@@ -59,6 +59,10 @@ public class ReviewService {
     }
 
     public Review acceptedInseratCreateReview(User sender, User receiver, Inserat inserat) {
+        if (reviewRepository.existsBySenderAndInserat(sender, inserat)) {
+            return null;
+        }
+
         Review review = new Review();
         review.setSender(sender);
         review.setReceiver(receiver);

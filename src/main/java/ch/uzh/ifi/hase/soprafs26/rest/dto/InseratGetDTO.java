@@ -29,7 +29,7 @@ public class InseratGetDTO {
     private LocalDate creationDate;
     private int volunteerAppliedCount;
     private List<String> volunteerAppliedIds;
-    private Long volunteerAcceptedId;
+    private String volunteerAcceptedId;
     private String volunteerAcceptedUsername;
     private String volunteerAcceptedPhone;
     private String volunteerAcceptedEmail;

@@ -136,6 +136,10 @@ public class InseratService {
             new ResponseStatusException(HttpStatus.NOT_FOUND, "Inserat not found"));
         User volunteer = checkUserExists(volunteerId);
 
+        if (inserat.getStatus() == InseratStatus.ACCEPTED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A volunteer has already been accepted for this inserat");
+        }
+
         if (!inserat.getVolunteerApplied().contains(volunteer)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This volunteer has not applied to this inserat");
         }
