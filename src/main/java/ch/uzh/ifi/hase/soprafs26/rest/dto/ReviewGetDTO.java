@@ -1,5 +1,6 @@
 package ch.uzh.ifi.hase.soprafs26.rest.dto;
 
+import ch.uzh.ifi.hase.soprafs26.constant.ReviewStatus;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,4 +18,5 @@ public class ReviewGetDTO {
     private String receiverUsername;
     private String inseratDescription;
     private String inseratLocation;
+    private ReviewStatus reviewStatus;
 }
