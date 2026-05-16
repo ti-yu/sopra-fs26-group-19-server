@@ -68,6 +68,7 @@ public interface DTOMapper {
 
     @Mapping(source = "receiver.id", target = "receiverId")
     @Mapping(source = "receiver.username", target = "receiverUsername")
+    @Mapping(source = "sender.username", target = "senderUsername")
     @Mapping(source = "inserat.description", target = "inseratDescription")
     @Mapping(source = "inserat.location", target = "inseratLocation")
     ReviewGetDTO convertEntityToReviewGetDTO(Review review);

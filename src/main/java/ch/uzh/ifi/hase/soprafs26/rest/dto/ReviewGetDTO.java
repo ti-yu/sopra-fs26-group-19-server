@@ -16,6 +16,7 @@ public class ReviewGetDTO {
     private String text;
     private LocalDate creationDate;
     private String receiverUsername;
+    private String senderUsername;
     private String inseratDescription;
     private String inseratLocation;
     private ReviewStatus reviewStatus;
