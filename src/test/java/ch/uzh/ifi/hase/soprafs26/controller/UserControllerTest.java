@@ -2,7 +2,9 @@ package ch.uzh.ifi.hase.soprafs26.controller;
 
 import tools.jackson.databind.ObjectMapper;
 
+import ch.uzh.ifi.hase.soprafs26.entity.Review;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.PasswordChangeDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 import ch.uzh.ifi.hase.soprafs26.service.ReviewService;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
@@ -154,6 +156,81 @@ public class UserControllerTest {
         // then: status 404
         mockMvc.perform(postRequest)
                 .andExpect(status().isNotFound());
+    }
+
+    // --- change-password endpoint -----------------------------------------
+
+    @Test
+    public void changePassword_validInput_returns200() throws Exception {
+        // service does its work silently on success
+        Mockito.doNothing().when(userService)
+                .changePassword(Mockito.eq("u1"), Mockito.eq("oldPwd"), Mockito.eq("newPwdLong"));
+
+        PasswordChangeDTO dto = new PasswordChangeDTO();
+        dto.setOldPassword("oldPwd");
+        dto.setNewPassword("newPwdLong");
+
+        mockMvc.perform(post("/profile/u1/change-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(dto)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void changePassword_wrongOldPassword_returns401() throws Exception {
+        Mockito.doThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Current password is incorrect"))
+                .when(userService).changePassword(Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+
+        PasswordChangeDTO dto = new PasswordChangeDTO();
+        dto.setOldPassword("wrong");
+        dto.setNewPassword("anything123");
+
+        mockMvc.perform(post("/profile/u1/change-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(dto)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void changePassword_weakNew_returns400() throws Exception {
+        Mockito.doThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password must be at least 6 characters"))
+                .when(userService).changePassword(Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+
+        PasswordChangeDTO dto = new PasswordChangeDTO();
+        dto.setOldPassword("oldPwd");
+        dto.setNewPassword("abc");
+
+        mockMvc.perform(post("/profile/u1/change-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(dto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    // --- dismiss-for-now endpoint -----------------------------------------
+
+    @Test
+    public void dismissReviewForNow_returnsUpdatedReview() throws Exception {
+        // Build a minimally populated review the mapper can serialise.
+        Review review = new Review();
+        review.setId("rev-1");
+        User sender = new User();
+        sender.setId("u1");
+        sender.setUsername("alice");
+        User receiver = new User();
+        receiver.setId("u2");
+        receiver.setUsername("bob");
+        review.setSender(sender);
+        review.setReceiver(receiver);
+        review.setText("");
+        review.setReviewStatus(ch.uzh.ifi.hase.soprafs26.constant.ReviewStatus.PENDING);
+
+        given(reviewService.dismissReviewForNow("rev-1")).willReturn(review);
+
+        mockMvc.perform(post("/profile/u1/reviews/rev-1/dismiss-for-now")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is("rev-1")))
+                .andExpect(jsonPath("$.reviewStatus", is("PENDING")));
     }
 
     /**

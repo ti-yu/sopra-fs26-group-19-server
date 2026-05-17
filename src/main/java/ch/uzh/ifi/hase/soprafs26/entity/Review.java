@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -41,6 +42,21 @@ public class Review implements Serializable {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ReviewStatus reviewStatus;
+
+    /**
+     * 1.0 - 5.0 in 0.5 steps. Nullable so existing rows (created before the
+     * feature shipped) don't need a back-fill.
+     */
+    @Column(nullable = true)
+    private Double stars;
+
+    /**
+     * When the user "ignores for now", we set this timestamp to now + 24 h.
+     * The review popup endpoint skips reviews while ignoreUntil is still in
+     * the future, so the popup re-appears one day later. Nullable.
+     */
+    @Column(nullable = true)
+    private LocalDateTime ignoreUntil;
 
     public String getId() {
         return id;
@@ -104,5 +120,21 @@ public class Review implements Serializable {
 
     public void setReviewStatus(ReviewStatus reviewStatus) {
         this.reviewStatus = reviewStatus;
+    }
+
+    public Double getStars() {
+        return stars;
+    }
+
+    public void setStars(Double stars) {
+        this.stars = stars;
+    }
+
+    public LocalDateTime getIgnoreUntil() {
+        return ignoreUntil;
+    }
+
+    public void setIgnoreUntil(LocalDateTime ignoreUntil) {
+        this.ignoreUntil = ignoreUntil;
     }
 }

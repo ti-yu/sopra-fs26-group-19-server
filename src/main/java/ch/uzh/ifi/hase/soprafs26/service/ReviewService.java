@@ -16,6 +16,7 @@ import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 import ch.uzh.ifi.hase.soprafs26.entity.Inserat;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -143,7 +144,7 @@ public class ReviewService {
         return review;
     }
 
-    public Review userWritesReview(String reviewId, String text) {
+    public Review userWritesReview(String reviewId, String text, Double stars) {
         Review review = reviewRepository.findById(reviewId).orElseThrow(() ->
             new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
 
@@ -156,10 +157,24 @@ public class ReviewService {
         if (review.getReviewStatus() == ReviewStatus.IGNORED) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot write a review that was ignored");
         }
+        if (stars == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Star rating is required");
+        }
+        if (stars < 0.5 || stars > 5.0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Stars must be between 0.5 and 5.0");
+        }
+        // Ensure half-step granularity (0.5, 1.0, 1.5, ..., 5.0)
+        double doubled = stars * 2;
+        if (doubled != Math.floor(doubled)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Stars must be in 0.5 increments");
+        }
 
         review.setText(text);
+        review.setStars(stars);
         review.setReviewStatus(ReviewStatus.WRITTEN);
         review.setFinished(true);
+        // Clear any "ignore for now" timestamp now that the review is written.
+        review.setIgnoreUntil(null);
 
         review = reviewRepository.save(review);
         reviewRepository.flush();
@@ -168,16 +183,44 @@ public class ReviewService {
         return review;
     }
 
+    /**
+     * Issue #151: when the user dismisses the popup with "Ignore for now",
+     * push the next reminder out by 24 hours instead of clearing it forever.
+     * Status stays PENDING; only the ignoreUntil timestamp moves.
+     */
+    public Review dismissReviewForNow(String reviewId) {
+        Review review = reviewRepository.findById(reviewId).orElseThrow(() ->
+            new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
+
+        if (review.isFinished()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot dismiss a finished review");
+        }
+
+        review.setIgnoreUntil(LocalDateTime.now(ZURICH_ZONE).plusHours(24));
+
+        review = reviewRepository.save(review);
+        reviewRepository.flush();
+
+        log.debug("Review {} ignored for 24h", reviewId);
+        return review;
+    }
+
     public Review reviewPopupNecessary(User user) {
         List<Review> reviewList = reviewRepository.findBySender(user);
+        LocalDateTime now = LocalDateTime.now(ZURICH_ZONE);
         for (Review review : reviewList) {
             // TESTING MODE: show popup immediately on session start for any unfinished review.
             // To switch to timing-based behaviour (show after inserat ends), replace this block with:
             //   updateReviewStatusBasedOnObjective(review);
             //   if (review.getReviewStatus() == ReviewStatus.PENDING) { return review; }
-            if (!review.isFinished() && review.getReviewStatus() != ReviewStatus.IGNORED) {
-                return review;
+            if (review.isFinished() || review.getReviewStatus() == ReviewStatus.IGNORED) {
+                continue;
             }
+            // Issue #151: respect "ignore for now" (24h cool-down).
+            if (review.getIgnoreUntil() != null && review.getIgnoreUntil().isAfter(now)) {
+                continue;
+            }
+            return review;
         }
         return null;
     }

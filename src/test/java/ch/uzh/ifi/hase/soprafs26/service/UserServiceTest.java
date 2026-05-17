@@ -76,7 +76,7 @@ public class UserServiceTest {
     @Test
     public void createUser_validInputs_success() {
         // createUser flow: checkIfUserExists (findByUsername + findByEmailAddress)
-        // → save → loginUser (findByUsername again to verify user exists).
+        // then save, then loginUser (findByUsername again to verify user exists).
         // So findByUsername is called twice: first for uniqueness (must return null),
         // then for login lookup (must return the saved user).
         Mockito.when(userRepository.findByUsername("testUser"))
@@ -217,6 +217,63 @@ public class UserServiceTest {
         assertEquals("newUsername", testUser.getUsername());
         assertEquals("new@email.com", testUser.getEmailAddress());
         assertEquals("Updated bio", testUser.getBio());
+    }
+
+    // --- changePassword -----------------------------------------------------
+
+    @Test
+    public void changePassword_validInputs_success() {
+        // given: user exists with the expected old password
+        testUser.setId("u1");
+        Mockito.when(userRepository.findById("u1")).thenReturn(java.util.Optional.of(testUser));
+
+        // when
+        userService.changePassword("u1", "testPassword", "brandNewPwd");
+
+        // then: password is updated and save is invoked
+        assertEquals("brandNewPwd", testUser.getPassword());
+        Mockito.verify(userRepository, Mockito.times(1)).save(testUser);
+    }
+
+    @Test
+    public void changePassword_wrongOldPassword_throwsUnauthorized() {
+        testUser.setId("u1");
+        Mockito.when(userRepository.findById("u1")).thenReturn(java.util.Optional.of(testUser));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+            () -> userService.changePassword("u1", "wrongOld", "brandNewPwd"));
+        assertEquals(HttpStatus.UNAUTHORIZED, ex.getStatusCode());
+        // password must not have changed
+        assertEquals("testPassword", testUser.getPassword());
+    }
+
+    @Test
+    public void changePassword_blankOldPassword_throwsBadRequest() {
+        testUser.setId("u1");
+        Mockito.when(userRepository.findById("u1")).thenReturn(java.util.Optional.of(testUser));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+            () -> userService.changePassword("u1", "  ", "brandNewPwd"));
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+    }
+
+    @Test
+    public void changePassword_tooShortNew_throwsBadRequest() {
+        testUser.setId("u1");
+        Mockito.when(userRepository.findById("u1")).thenReturn(java.util.Optional.of(testUser));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+            () -> userService.changePassword("u1", "testPassword", "abc"));
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+    }
+
+    @Test
+    public void changePassword_userNotFound_throwsNotFound() {
+        Mockito.when(userRepository.findById("ghost")).thenReturn(java.util.Optional.empty());
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+            () -> userService.changePassword("ghost", "old", "longEnough"));
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
     }
 
     @Test
