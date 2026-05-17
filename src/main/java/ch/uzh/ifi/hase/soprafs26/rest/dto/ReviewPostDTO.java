@@ -12,4 +12,5 @@ public class ReviewPostDTO {
     private String receiverId;
     private String inseratId;
     private String text;
+    private Double stars;
 }

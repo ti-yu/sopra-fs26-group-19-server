@@ -64,7 +64,7 @@ public class UserService {
         userRepository.flush();
 
         log.debug("Created user: {}", newUser);
-        return loginUser(newUser); // ✅ auto-login sets the token
+        return loginUser(newUser); // auto-login sets the token
     }
 
     private void normalizeUserInput(User user) {
@@ -256,5 +256,33 @@ public class UserService {
         userRepository.save(existingUser);
         userRepository.flush();
         log.debug("Updated user: {}", existingUser);
+    }
+
+    /**
+     * Verifies the user's current password and replaces it with the new one.
+     * Throws 401 if the old password is wrong, 400 if the new password is
+     * empty or too short.
+     */
+    public void changePassword(String userId, String oldPassword, String newPassword) {
+        User user = getUserById(userId);
+
+        if (isBlank(oldPassword)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current password must not be empty");
+        }
+        if (isBlank(newPassword)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password must not be empty");
+        }
+        if (newPassword.trim().length() < 6) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password must be at least 6 characters");
+        }
+
+        if (!user.getPassword().equals(oldPassword.trim())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Current password is incorrect");
+        }
+
+        user.setPassword(newPassword.trim());
+        userRepository.save(user);
+        userRepository.flush();
+        log.debug("Changed password for user: {}", user.getId());
     }
 }

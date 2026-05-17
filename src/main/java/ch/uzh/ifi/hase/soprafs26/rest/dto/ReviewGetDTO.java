@@ -20,4 +20,5 @@ public class ReviewGetDTO {
     private String inseratDescription;
     private String inseratLocation;
     private ReviewStatus reviewStatus;
+    private Double stars;
 }

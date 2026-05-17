@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 
 import ch.uzh.ifi.hase.soprafs26.entity.Review;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.PasswordChangeDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.ReviewGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.ReviewPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
@@ -78,7 +79,7 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
     public ReviewGetDTO writeReview(@PathVariable String reviewId, @RequestBody ReviewPostDTO dto) {
-        Review review = reviewService.userWritesReview(reviewId, dto.getText());
+        Review review = reviewService.userWritesReview(reviewId, dto.getText(), dto.getStars());
         return DTOMapper.INSTANCE.convertEntityToReviewGetDTO(review);
     }
 
@@ -88,6 +89,29 @@ public class UserController {
     public ReviewGetDTO ignoreReview(@PathVariable String reviewId) {
         Review review = reviewService.userIgnoresReview(reviewId);
         return DTOMapper.INSTANCE.convertEntityToReviewGetDTO(review);
+    }
+
+    /**
+     * Issue #151: "Ignore for now" pushes the popup out by 24 hours.
+     * Status stays PENDING, only the ignoreUntil timestamp changes.
+     */
+    @PostMapping("/profile/{id}/reviews/{reviewId}/dismiss-for-now")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public ReviewGetDTO dismissReviewForNow(@PathVariable String reviewId) {
+        Review review = reviewService.dismissReviewForNow(reviewId);
+        return DTOMapper.INSTANCE.convertEntityToReviewGetDTO(review);
+    }
+
+    /**
+     * Settings page: change-password flow. Verifies the old password and
+     * replaces it with the new one. Returns 200 on success, 401 on wrong old,
+     * 400 on weak new.
+     */
+    @PostMapping("/profile/{id}/change-password")
+    @ResponseStatus(HttpStatus.OK)
+    public void changePassword(@PathVariable String id, @RequestBody PasswordChangeDTO dto) {
+        userService.changePassword(id, dto.getOldPassword(), dto.getNewPassword());
     }
 
     @GetMapping("/profile/{id}/reviews/done")
