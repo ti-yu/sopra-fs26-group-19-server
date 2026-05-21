@@ -239,4 +239,20 @@ public class InseratService {
         .filter(inserat -> inserat.getLatitude() != null && inserat.getLongitude() != null)
         .collect(Collectors.toList());
     }
+    public void deleteInserat(String inseratId, String currentUserId) {
+        Inserat inserat = inseratRepository.findById(inseratId).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "Inserat not found")
+        );
+        if (!inserat.getRecipient().getId().equals(currentUserId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "You can only delete your own help requests."
+            );
+        }
+        inseratRepository.delete(inserat);
+        inseratRepository.flush();
+
+        log.debug("Deleted inserat with id: {}", inseratId);
+    }
+
 }
