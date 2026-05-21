@@ -110,6 +110,15 @@ public class InseratController {
         return DTOMapper.INSTANCE.convertEntityToInseratGetDTO(updated);
     }
 
+    @DeleteMapping("/help-requests/{inseratId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteInserat(
+            @PathVariable String inseratId,
+            @RequestParam("userId") String userId
+    ) {
+        inseratService.deleteInserat(inseratId, userId);
+    }
+
     @GetMapping("/help-requests-map")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
