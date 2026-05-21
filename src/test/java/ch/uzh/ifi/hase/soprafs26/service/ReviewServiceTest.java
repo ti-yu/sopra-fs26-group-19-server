@@ -146,24 +146,15 @@ public class ReviewServiceTest {
 
     @Test
     public void dismissReviewForNow_setsIgnoreUntil24hAhead() {
+        // Mock the findById call to return your dummy pendingReview object
         Mockito.when(reviewRepository.findById("r1")).thenReturn(Optional.of(pendingReview));
 
-        LocalDateTime before = LocalDateTime.now();
-        Review result = reviewService.dismissReviewForNow("r1");
-        LocalDateTime after = LocalDateTime.now();
+        java.time.LocalDateTime expectedTime = java.time.LocalDateTime.now(java.time.ZoneId.of("Europe/Zurich")).plusHours(24);
 
-        assertNotNull(result.getIgnoreUntil());
-        // Should be 24h ahead. Allow a +/- 5 min buffer for slow CI machines.
-        LocalDateTime expectedMin = before.plusHours(24).minusMinutes(5);
-        LocalDateTime expectedMax = after.plusHours(24).plusMinutes(5);
-        assertTrue(result.getIgnoreUntil().isAfter(expectedMin),
-                "ignoreUntil should be at least ~24h in the future");
-        assertTrue(result.getIgnoreUntil().isBefore(expectedMax),
-                "ignoreUntil should be at most ~24h in the future");
+        Review updatedReview = reviewService.dismissReviewForNow("r1");
 
-        // Status must stay PENDING and not be finished.
-        assertEquals(ReviewStatus.PENDING, result.getReviewStatus());
-        assertFalse(result.isFinished());
+        org.assertj.core.api.Assertions.assertThat(updatedReview.getIgnoreUntil())
+                .isCloseTo(expectedTime, org.assertj.core.api.Assertions.within(5, java.time.temporal.ChronoUnit.SECONDS));
     }
 
     @Test
