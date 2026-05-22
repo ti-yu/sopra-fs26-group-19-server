@@ -2,6 +2,7 @@ package ch.uzh.ifi.hase.soprafs26.controller;
 
 import tools.jackson.databind.ObjectMapper;
 
+import ch.uzh.ifi.hase.soprafs26.constant.ReviewStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.Review;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.PasswordChangeDTO;
@@ -20,6 +21,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Collections;
+import java.util.List;
+
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -233,10 +239,131 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.reviewStatus", is("PENDING")));
     }
 
-    /**
-     * Converts an object to its JSON string representation for use as request body.
-     * Uses Jackson's ObjectMapper (tools.jackson package in Spring Boot 4.0).
-     */
+
+
+
+    @Test
+    public void dismissReviewForNow_finishedReview_returns400() throws Exception {
+        given(reviewService.dismissReviewForNow("rev-1"))
+                .willThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Cannot dismiss a finished review"));
+ 
+        mockMvc.perform(post("/profile/u1/reviews/rev-1/dismiss-for-now")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+ 
+    @Test
+    public void dismissReviewForNow_reviewNotFound_returns404() throws Exception {
+        given(reviewService.dismissReviewForNow("missing"))
+                .willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
+ 
+        mockMvc.perform(post("/profile/u1/reviews/missing/dismiss-for-now")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+ 
+    // --- GET /profile/{id}/reviews/done ------------------------------------
+ 
+    @Test
+    public void getDoneReviews_returnsList() throws Exception {
+        User user = createTestUser();
+        Review r1 = createTestReview("rev-1", ReviewStatus.WRITTEN);
+        Review r2 = createTestReview("rev-2", ReviewStatus.IGNORED);
+ 
+        given(userService.getUserById("test-uuid-123")).willReturn(user);
+        given(reviewService.fetchDoneReviews(user)).willReturn(List.of(r1, r2));
+ 
+        mockMvc.perform(get("/profile/test-uuid-123/reviews/done")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].id", is("rev-1")))
+                .andExpect(jsonPath("$[0].reviewStatus", is("WRITTEN")))
+                .andExpect(jsonPath("$[1].id", is("rev-2")))
+                .andExpect(jsonPath("$[1].reviewStatus", is("IGNORED")));
+        }
+        
+        @Test
+        public void getDoneReviews_emptyList_returnsEmptyArray() throws Exception {
+                User user = createTestUser();
+                given(userService.getUserById("test-uuid-123")).willReturn(user);
+                given(reviewService.fetchDoneReviews(user)).willReturn(Collections.emptyList());
+        
+                mockMvc.perform(get("/profile/test-uuid-123/reviews/done")
+                                .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$", empty()));
+        }
+        
+        @Test
+        public void getDoneReviews_userNotFound_returns404() throws Exception {
+                given(userService.getUserById("missing")).willThrow(
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        
+                mockMvc.perform(get("/profile/missing/reviews/done")
+                                .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isNotFound());
+        }
+        
+        // --- GET /profile/{id}/reviews/received --------------------------------
+        
+        @Test
+        public void getReceivedReviews_returnsList() throws Exception {
+                User user = createTestUser();
+                Review r1 = createTestReview("rev-1", ReviewStatus.WRITTEN);
+                r1.setText("Excellent!");
+                r1.setStars(5.0);
+        
+                given(userService.getUserById("test-uuid-123")).willReturn(user);
+                given(reviewService.fetchReceivedReviews(user)).willReturn(List.of(r1));
+        
+                mockMvc.perform(get("/profile/test-uuid-123/reviews/received")
+                                .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$", hasSize(1)))
+                        .andExpect(jsonPath("$[0].id", is("rev-1")))
+                        .andExpect(jsonPath("$[0].stars", is(5.0)));
+        }
+        
+        @Test
+        public void getReceivedReviews_emptyList_returnsEmptyArray() throws Exception {
+                User user = createTestUser();
+                given(userService.getUserById("test-uuid-123")).willReturn(user);
+                given(reviewService.fetchReceivedReviews(user)).willReturn(Collections.emptyList());
+        
+                mockMvc.perform(get("/profile/test-uuid-123/reviews/received")
+                                .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$", empty()));
+        }
+        
+        @Test
+        public void getReceivedReviews_userNotFound_returns404() throws Exception {
+                given(userService.getUserById("missing")).willThrow(
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        
+                mockMvc.perform(get("/profile/missing/reviews/received")
+                                .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isNotFound());
+        }
+        
+    private Review createTestReview(String id, ReviewStatus status) {
+        Review review = new Review();
+        review.setId(id);
+        review.setReviewStatus(status);
+        review.setText("");
+        User sender = new User();
+        sender.setId("u-sender");
+        sender.setUsername("sender");
+        User receiver = new User();
+        receiver.setId("u-receiver");
+        receiver.setUsername("receiver");
+        review.setSender(sender);
+        review.setReceiver(receiver);
+        return review;
+    }
+
     private String asJsonString(final Object object) {
         try {
             return new ObjectMapper().writeValueAsString(object);
