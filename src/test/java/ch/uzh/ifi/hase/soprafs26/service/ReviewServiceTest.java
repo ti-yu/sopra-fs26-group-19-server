@@ -485,4 +485,214 @@ public class ReviewServiceTest {
         assertEquals(ReviewStatus.WRITTEN, result.getReviewStatus());
         assertEquals(100, result.getText().length());
     }
+
+
+
+    @Test
+    public void fetchDoneReviews_returnsOnlyFinishedReviews() {
+        Review written = new Review();
+        written.setId("done-1");
+        written.setSender(sender);
+        written.setReviewStatus(ReviewStatus.WRITTEN);
+        written.setFinished(true);
+        written.setText("Already written");
+    
+        Review unfinished = new Review();
+        unfinished.setId("pending-1");
+        unfinished.setSender(sender);
+        unfinished.setReviewStatus(ReviewStatus.PENDING);
+        unfinished.setFinished(false);
+        unfinished.setText("");
+        Inserat futureInserat = new Inserat();
+        futureInserat.setDate(LocalDate.now(ZURICH).plusDays(2));
+        unfinished.setInserat(futureInserat);
+    
+        Mockito.when(reviewRepository.findBySender(sender))
+                .thenReturn(List.of(written, unfinished));
+    
+        List<Review> result = reviewService.fetchDoneReviews(sender);
+    
+        assertEquals(1, result.size());
+        assertEquals("done-1", result.get(0).getId());
+    }
+    
+    @Test
+    public void fetchDoneReviews_flipsOverdueReviewToFinishedAndIncludesIt() {
+        // Inserat over 3 months past -> updateReviewStatusBasedOnObjective
+        // marks the review IGNORED + finished, so it should appear in the result.
+        Review overdue = new Review();
+        overdue.setId("overdue-1");
+        overdue.setSender(sender);
+        overdue.setReviewStatus(ReviewStatus.PENDING);
+        overdue.setFinished(false);
+        overdue.setText("");
+        Inserat oldInserat = new Inserat();
+        oldInserat.setDate(LocalDate.now(ZURICH).minusMonths(4));
+        overdue.setInserat(oldInserat);
+    
+        Mockito.when(reviewRepository.findBySender(sender))
+                .thenReturn(List.of(overdue));
+    
+        List<Review> result = reviewService.fetchDoneReviews(sender);
+    
+        assertEquals(1, result.size());
+        assertEquals("overdue-1", result.get(0).getId());
+        assertTrue(result.get(0).isFinished());
+        assertEquals(ReviewStatus.IGNORED, result.get(0).getReviewStatus());
+    }
+    
+    @Test
+    public void fetchDoneReviews_emptyList_returnsEmpty() {
+        Mockito.when(reviewRepository.findBySender(sender))
+                .thenReturn(Collections.emptyList());
+    
+        assertTrue(reviewService.fetchDoneReviews(sender).isEmpty());
+    }
+    
+    // --- getReviewsByReceiverId: happy path ----------------------------------
+    
+    @Test
+    public void getReviewsByReceiverId_userExists_returnsList() {
+        Mockito.when(userRepository.findById("u1")).thenReturn(Optional.of(sender));
+        Mockito.when(reviewRepository.findByReceiver(sender)).thenReturn(List.of(pendingReview));
+    
+        List<Review> result = reviewService.getReviewsByReceiverId("u1");
+    
+        assertEquals(1, result.size());
+        assertEquals("r1", result.get(0).getId());
+    }
+    
+    // --- updateReviewStatusBasedOnObjective: today + missing time -----------
+    
+    @Test
+    public void updateStatus_inseratTodayNullTime_setsPending() {
+        Inserat inserat = new Inserat();
+        inserat.setDate(LocalDate.now(ZURICH));
+        inserat.setTime(null);
+        pendingReview.setInserat(inserat);
+    
+        assertEquals(ReviewStatus.PENDING,
+                reviewService.updateReviewStatusBasedOnObjective(pendingReview));
+    }
+    
+    @Test
+    public void updateStatus_inseratTodayBlankTime_setsPending() {
+        Inserat inserat = new Inserat();
+        inserat.setDate(LocalDate.now(ZURICH));
+        inserat.setTime("   ");
+        pendingReview.setInserat(inserat);
+    
+        assertEquals(ReviewStatus.PENDING,
+                reviewService.updateReviewStatusBasedOnObjective(pendingReview));
+    }
+    
+    // --- userWritesReview: gaps ---------------------------------------------
+    
+    @Test
+    public void userWritesReview_nullText_throwsBadRequest() {
+        Mockito.when(reviewRepository.findById("r1")).thenReturn(Optional.of(pendingReview));
+    
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> reviewService.userWritesReview("r1", null, 4.0));
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+    }
+    
+    @Test
+    public void userWritesReview_starsAtLowerBoundary_succeeds() {
+        Mockito.when(reviewRepository.findById("r1")).thenReturn(Optional.of(pendingReview));
+    
+        Review result = reviewService.userWritesReview("r1", "Bare minimum", 0.5);
+    
+        assertEquals(0.5, result.getStars());
+        assertEquals(ReviewStatus.WRITTEN, result.getReviewStatus());
+        assertTrue(result.isFinished());
+    }
+    
+    @Test
+    public void userWritesReview_starsAtUpperBoundary_succeeds() {
+        Mockito.when(reviewRepository.findById("r1")).thenReturn(Optional.of(pendingReview));
+    
+        Review result = reviewService.userWritesReview("r1", "Top marks", 5.0);
+    
+        assertEquals(5.0, result.getStars());
+        assertEquals(ReviewStatus.WRITTEN, result.getReviewStatus());
+        assertTrue(result.isFinished());
+    }
+    
+    @Test
+    public void userWritesReview_clearsExistingIgnoreUntil() {
+        // Pre-existing cool-down must be cleared once the review is written.
+        pendingReview.setIgnoreUntil(LocalDateTime.now().plusHours(10));
+        Mockito.when(reviewRepository.findById("r1")).thenReturn(Optional.of(pendingReview));
+    
+        Review result = reviewService.userWritesReview("r1", "Solid experience", 4.0);
+    
+        assertNull(result.getIgnoreUntil());
+        assertEquals(ReviewStatus.WRITTEN, result.getReviewStatus());
+    }
+    
+    // --- reviewPopupNecessary: iteration order ------------------------------
+    
+    @Test
+    public void reviewPopupNecessary_skipsIneligibleAndReturnsFirstEligible() {
+        Review finished = new Review();
+        finished.setId("skip-finished");
+        finished.setSender(sender);
+        finished.setFinished(true);
+        finished.setReviewStatus(ReviewStatus.WRITTEN);
+    
+        Review dismissed = new Review();
+        dismissed.setId("skip-dismissed");
+        dismissed.setSender(sender);
+        dismissed.setReviewStatus(ReviewStatus.PENDING);
+        dismissed.setFinished(false);
+        dismissed.setIgnoreUntil(LocalDateTime.now().plusHours(5));
+    
+        Review eligible = new Review();
+        eligible.setId("eligible");
+        eligible.setSender(sender);
+        eligible.setReviewStatus(ReviewStatus.PENDING);
+        eligible.setFinished(false);
+    
+        Mockito.when(reviewRepository.findBySender(sender))
+                .thenReturn(List.of(finished, dismissed, eligible));
+    
+        Review result = reviewService.reviewPopupNecessary(sender);
+    
+        assertNotNull(result);
+        assertEquals("eligible", result.getId());
+    }
+    
+    // --- fetchReceivedReviews: thin coverage --------------------------------
+    
+    @Test
+    public void fetchReceivedReviews_emptyList_returnsEmpty() {
+        Mockito.when(reviewRepository.findByReceiver(sender))
+                .thenReturn(Collections.emptyList());
+    
+        assertTrue(reviewService.fetchReceivedReviews(sender).isEmpty());
+    }
+    
+    @Test
+    public void fetchReceivedReviews_noWrittenReviews_returnsEmpty() {
+        Review pending = new Review();
+        pending.setId("rp");
+        pending.setReviewStatus(ReviewStatus.PENDING);
+    
+        Review ignored = new Review();
+        ignored.setId("ri");
+        ignored.setReviewStatus(ReviewStatus.IGNORED);
+    
+        Review hasnotHappened = new Review();
+        hasnotHappened.setId("rh");
+        hasnotHappened.setReviewStatus(ReviewStatus.HASNOTHAPPENED);
+    
+        Mockito.when(reviewRepository.findByReceiver(sender))
+                .thenReturn(List.of(pending, ignored, hasnotHappened));
+    
+        assertTrue(reviewService.fetchReceivedReviews(sender).isEmpty());
+    }
+
+
+
 }
