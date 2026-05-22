@@ -96,8 +96,8 @@ public class ReviewService {
             return review.getReviewStatus();
         }
 
-        LocalDateTime now = LocalDateTime.now(ZURICH_ZONE);
-        LocalDate currentDate = now.toLocalDate();
+        LocalDate currentDate = LocalDate.now(ZURICH_ZONE);
+        LocalTime currentTime = LocalTime.now(ZURICH_ZONE);
 
         Inserat inserat = review.getInserat();
         LocalDate inseratDate = inserat.getDate();
@@ -106,31 +106,19 @@ public class ReviewService {
             inseratTime = LocalTime.parse(inserat.getTime());
         }
 
-        // Build the inserat's END LocalDateTime so the comparison is correct
-        // even when a session crosses midnight. If no start time was given we
-        // treat the request as ending at the very end of its date.
-        LocalDateTime inseratEnd;
-        if (inseratTime != null) {
-            double durationHours = 0.0;
-            try {
-                durationHours = Double.parseDouble(inserat.getTimeframe());
-            } catch (NumberFormatException | NullPointerException ignored) {
-                // Default to 0 (= ends at start time). Conservative.
-            }
-            long totalMinutes = (long) Math.round(durationHours * 60);
-            inseratEnd = LocalDateTime.of(inseratDate, inseratTime).plusMinutes(totalMinutes);
-        } else {
-            inseratEnd = LocalDateTime.of(inseratDate, LocalTime.MAX);
-        }
 
         if (review.getText() != null && !review.getText().isEmpty()) {
             review.setReviewStatus(ReviewStatus.WRITTEN);
             review.setFinished(true);
-        } else if (inseratEnd.isAfter(now)) {
-            // Session has not yet finished.
+        } else if (inseratDate.isAfter(currentDate)) {
             review.setReviewStatus(ReviewStatus.HASNOTHAPPENED);
+        } else if (inseratDate.isEqual(currentDate)) {
+            if (inseratTime != null && inseratTime.isAfter(currentTime.plusHours(0))) {
+                review.setReviewStatus(ReviewStatus.HASNOTHAPPENED);
+            } else {
+                review.setReviewStatus(ReviewStatus.PENDING);
+            }
         } else if (currentDate.isAfter(inseratDate.plusMonths(3))) {
-            // Stale unwritten reviews drop out after 3 months.
             review.setReviewStatus(ReviewStatus.IGNORED);
             review.setFinished(true);
         } else {
@@ -221,14 +209,11 @@ public class ReviewService {
         List<Review> reviewList = reviewRepository.findBySender(user);
         LocalDateTime now = LocalDateTime.now(ZURICH_ZONE);
         for (Review review : reviewList) {
-            // Finished reviews (written or ignored) never re-trigger the popup.
-            if (review.isFinished()) {
-                continue;
-            }
-            // Refresh the status from the current time vs. inserat schedule.
-            // Only PENDING reviews (inserat already ended) should pop up.
-            updateReviewStatusBasedOnObjective(review);
-            if (review.getReviewStatus() != ReviewStatus.PENDING) {
+            // TESTING MODE: show popup immediately on session start for any unfinished review.
+            // To switch to timing-based behaviour (show after inserat ends), replace this block with:
+            //   updateReviewStatusBasedOnObjective(review);
+            //   if (review.getReviewStatus() == ReviewStatus.PENDING) { return review; }
+            if (review.isFinished() || review.getReviewStatus() == ReviewStatus.IGNORED) {
                 continue;
             }
             // Issue #151: respect "ignore for now" (24h cool-down).
