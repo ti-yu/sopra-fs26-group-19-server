@@ -74,9 +74,10 @@ public class UserServiceIntegrationTest {
 
     @Test
     public void createUser_duplicateUsername_throwsException() {
-        // given: a user already exists with this username
+        // start from an empty database (no user with this username yet)
         assertNull(userRepository.findByUsername("testUser"));
 
+        // given: a first user with this username gets created
         User firstUser = createFullUser("testUser", "first@example.com");
         userService.createUser(firstUser);
 

@@ -55,9 +55,19 @@ public class ReviewServiceTest {
         sender.setId("u1");
         sender.setUsername("alice");
 
+        // Attach a yesterday-dated Inserat so reviewPopupNecessary's status
+        // refresh marks the review PENDING (the help session has already
+        // ended) without needing further mocking in every test.
+        ch.uzh.ifi.hase.soprafs26.entity.Inserat inserat =
+            new ch.uzh.ifi.hase.soprafs26.entity.Inserat();
+        inserat.setId("i1");
+        inserat.setDate(java.time.LocalDate.now().minusDays(1));
+        inserat.setTimeframe("1");
+
         pendingReview = new Review();
         pendingReview.setId("r1");
         pendingReview.setSender(sender);
+        pendingReview.setInserat(inserat);
         pendingReview.setReviewStatus(ReviewStatus.PENDING);
         pendingReview.setFinished(false);
         pendingReview.setText("");
@@ -563,25 +573,67 @@ public class ReviewServiceTest {
     }
     
     // --- updateReviewStatusBasedOnObjective: today + missing time -----------
-    
+    // With the session-end timing logic, an inserat dated today with no start
+    // time is treated as "ends at end of day" and stays HASNOTHAPPENED until
+    // midnight.
+
     @Test
-    public void updateStatus_inseratTodayNullTime_setsPending() {
+    public void updateStatus_inseratTodayNullTime_setsHasNotHappened() {
         Inserat inserat = new Inserat();
         inserat.setDate(LocalDate.now(ZURICH));
         inserat.setTime(null);
         pendingReview.setInserat(inserat);
-    
-        assertEquals(ReviewStatus.PENDING,
+
+        assertEquals(ReviewStatus.HASNOTHAPPENED,
                 reviewService.updateReviewStatusBasedOnObjective(pendingReview));
     }
-    
+
     @Test
-    public void updateStatus_inseratTodayBlankTime_setsPending() {
+    public void updateStatus_inseratTodayBlankTime_setsHasNotHappened() {
         Inserat inserat = new Inserat();
         inserat.setDate(LocalDate.now(ZURICH));
         inserat.setTime("   ");
         pendingReview.setInserat(inserat);
-    
+
+        assertEquals(ReviewStatus.HASNOTHAPPENED,
+                reviewService.updateReviewStatusBasedOnObjective(pendingReview));
+    }
+
+    @Test
+    public void updateStatus_inseratYesterday_setsPending() {
+        Inserat inserat = new Inserat();
+        inserat.setDate(LocalDate.now(ZURICH).minusDays(1));
+        inserat.setTimeframe("1");
+        pendingReview.setInserat(inserat);
+
+        assertEquals(ReviewStatus.PENDING,
+                reviewService.updateReviewStatusBasedOnObjective(pendingReview));
+    }
+
+    @Test
+    public void updateStatus_inseratStartedButEndsLater_setsHasNotHappened() {
+        // Session started 30 min ago and runs 2 hours total: still ongoing.
+        java.time.LocalTime startedThirtyMinAgo = java.time.LocalTime.now(ZURICH).minusMinutes(30);
+        Inserat inserat = new Inserat();
+        inserat.setDate(LocalDate.now(ZURICH));
+        inserat.setTime(startedThirtyMinAgo.toString().substring(0, 5));
+        inserat.setTimeframe("2");
+        pendingReview.setInserat(inserat);
+
+        assertEquals(ReviewStatus.HASNOTHAPPENED,
+                reviewService.updateReviewStatusBasedOnObjective(pendingReview));
+    }
+
+    @Test
+    public void updateStatus_inseratEndedAlready_setsPending() {
+        // Session ended 30 minutes ago (started 1h30 ago, ran for 1h).
+        java.time.LocalTime startedNinetyMinAgo = java.time.LocalTime.now(ZURICH).minusMinutes(90);
+        Inserat inserat = new Inserat();
+        inserat.setDate(LocalDate.now(ZURICH));
+        inserat.setTime(startedNinetyMinAgo.toString().substring(0, 5));
+        inserat.setTimeframe("1");
+        pendingReview.setInserat(inserat);
+
         assertEquals(ReviewStatus.PENDING,
                 reviewService.updateReviewStatusBasedOnObjective(pendingReview));
     }
@@ -635,30 +687,38 @@ public class ReviewServiceTest {
     
     @Test
     public void reviewPopupNecessary_skipsIneligibleAndReturnsFirstEligible() {
+        // A yesterday-dated inserat is needed on every non-finished review
+        // because reviewPopupNecessary now refreshes the status from the schedule.
+        Inserat pastInserat = new Inserat();
+        pastInserat.setDate(LocalDate.now(ZURICH).minusDays(1));
+        pastInserat.setTimeframe("1");
+
         Review finished = new Review();
         finished.setId("skip-finished");
         finished.setSender(sender);
         finished.setFinished(true);
         finished.setReviewStatus(ReviewStatus.WRITTEN);
-    
+
         Review dismissed = new Review();
         dismissed.setId("skip-dismissed");
         dismissed.setSender(sender);
+        dismissed.setInserat(pastInserat);
         dismissed.setReviewStatus(ReviewStatus.PENDING);
         dismissed.setFinished(false);
         dismissed.setIgnoreUntil(LocalDateTime.now().plusHours(5));
-    
+
         Review eligible = new Review();
         eligible.setId("eligible");
         eligible.setSender(sender);
+        eligible.setInserat(pastInserat);
         eligible.setReviewStatus(ReviewStatus.PENDING);
         eligible.setFinished(false);
-    
+
         Mockito.when(reviewRepository.findBySender(sender))
                 .thenReturn(List.of(finished, dismissed, eligible));
-    
+
         Review result = reviewService.reviewPopupNecessary(sender);
-    
+
         assertNotNull(result);
         assertEquals("eligible", result.getId());
     }
