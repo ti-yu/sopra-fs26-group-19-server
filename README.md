@@ -212,7 +212,7 @@ This platform was designed, engineered, and maintained by:
 
 * **Timur Yu** ([ti-yu](https://github.com/ti-yu))
 * **Lisa Gehrig** ([lisgeh2](https://github.com/lisgeh2))
-* **Jonathan Boggia** ([jonathanbogia](https://github.com/jonathanboggia))
+* **Jonathan Boggia** ([jonathanboggia](https://github.com/jonathanboggia))
 * **Romeo Pestalozzi** ([romevp](https://github.com/romevp))
 ---
 ## License
