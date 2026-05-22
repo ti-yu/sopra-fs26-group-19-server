@@ -171,7 +171,7 @@ public class UserServiceTest {
 
     @Test
     public void loginUser_missingData_throwsBadRequest() {
-        //gien: missing password
+        //given: missing password
         User invalidLogin = new User();
         invalidLogin.setUsername("testUser");
 

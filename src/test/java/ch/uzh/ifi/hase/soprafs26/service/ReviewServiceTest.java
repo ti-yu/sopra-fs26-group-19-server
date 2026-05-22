@@ -15,10 +15,14 @@ import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.ReviewRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+
+import ch.uzh.ifi.hase.soprafs26.entity.Inserat;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -195,7 +199,7 @@ public class ReviewServiceTest {
         Mockito.when(reviewRepository.findBySender(sender))
                 .thenReturn(List.of(pendingReview));
 
-        Review result = reviewService.reviewPopupNecessary(sender);
+        Review  result = reviewService.reviewPopupNecessary(sender);
         assertNull(result);
     }
 
@@ -235,5 +239,250 @@ public class ReviewServiceTest {
                 .thenReturn(Collections.emptyList());
 
         assertNull(reviewService.reviewPopupNecessary(sender));
+    }
+
+    private static final ZoneId ZURICH = ZoneId.of("Europe/Zurich");
+
+    // --- updateReviewStatusBasedOnObjective: status transitions --------------
+
+    @Test
+    public void updateStatus_finishedReview_noChange() {
+        pendingReview.setFinished(true);
+        pendingReview.setReviewStatus(ReviewStatus.WRITTEN);
+
+        ReviewStatus result = reviewService.updateReviewStatusBasedOnObjective(pendingReview);
+
+        assertEquals(ReviewStatus.WRITTEN, result);
+        Mockito.verify(reviewRepository, Mockito.never()).save(pendingReview);
+    }
+
+    @Test
+    public void updateStatus_ignoredStatus_setsFinished() {
+        pendingReview.setReviewStatus(ReviewStatus.IGNORED);
+
+        ReviewStatus result = reviewService.updateReviewStatusBasedOnObjective(pendingReview);
+
+        assertEquals(ReviewStatus.IGNORED, result);
+        assertTrue(pendingReview.isFinished());
+    }
+
+    @Test
+    public void updateStatus_inseratInFuture_setsHasNotHappened() {
+        Inserat inserat = new Inserat();
+        inserat.setDate(LocalDate.now(ZURICH).plusDays(5));
+        pendingReview.setInserat(inserat);
+
+        assertEquals(ReviewStatus.HASNOTHAPPENED,
+                reviewService.updateReviewStatusBasedOnObjective(pendingReview));
+    }
+
+    @Test
+    public void updateStatus_inseratTodayLaterTime_setsHasNotHappened() {
+        Inserat inserat = new Inserat();
+        inserat.setDate(LocalDate.now(ZURICH));
+        inserat.setTime("23:59"); // safely later than "now" except in last minute of day
+        pendingReview.setInserat(inserat);
+
+        assertEquals(ReviewStatus.HASNOTHAPPENED,
+                reviewService.updateReviewStatusBasedOnObjective(pendingReview));
+    }
+
+    @Test
+    public void updateStatus_inseratTodayPastTime_setsPending() {
+        Inserat inserat = new Inserat();
+        inserat.setDate(LocalDate.now(ZURICH));
+        inserat.setTime("00:00");
+        pendingReview.setInserat(inserat);
+
+        assertEquals(ReviewStatus.PENDING,
+                reviewService.updateReviewStatusBasedOnObjective(pendingReview));
+    }
+
+    @Test
+    public void updateStatus_inseratRecentlyPast_setsPending() {
+        Inserat inserat = new Inserat();
+        inserat.setDate(LocalDate.now(ZURICH).minusDays(10));
+        pendingReview.setInserat(inserat);
+
+        assertEquals(ReviewStatus.PENDING,
+                reviewService.updateReviewStatusBasedOnObjective(pendingReview));
+        assertFalse(pendingReview.isFinished());
+    }
+
+    @Test
+    public void updateStatus_inseratOver3MonthsPast_setsIgnoredAndFinished() {
+        Inserat inserat = new Inserat();
+        inserat.setDate(LocalDate.now(ZURICH).minusMonths(4));
+        pendingReview.setInserat(inserat);
+
+        assertEquals(ReviewStatus.IGNORED,
+                reviewService.updateReviewStatusBasedOnObjective(pendingReview));
+        assertTrue(pendingReview.isFinished());
+    }
+
+    @Test
+    public void updateStatus_textAlreadyPresent_setsWritten() {
+        Inserat inserat = new Inserat();
+        inserat.setDate(LocalDate.now(ZURICH).minusDays(5));
+        pendingReview.setInserat(inserat);
+        pendingReview.setText("Was already filled in");
+
+        assertEquals(ReviewStatus.WRITTEN,
+                reviewService.updateReviewStatusBasedOnObjective(pendingReview));
+        assertTrue(pendingReview.isFinished());
+    }
+
+    // --- acceptedInseratCreateReview: link between inserat and review --------
+
+    @Test
+    public void acceptedInseratCreateReview_newReview_createsWithCorrectFields() {
+        User receiver = new User();
+        receiver.setId("u2");
+        Inserat inserat = new Inserat();
+        inserat.setDate(LocalDate.now(ZURICH).plusDays(3)); // future → HASNOTHAPPENED
+
+        Mockito.when(reviewRepository.existsBySenderAndInserat(sender, inserat))
+                .thenReturn(false);
+
+        Review result = reviewService.acceptedInseratCreateReview(sender, receiver, inserat);
+
+        assertNotNull(result);
+        assertEquals(sender, result.getSender());
+        assertEquals(receiver, result.getReceiver());
+        assertEquals(inserat, result.getInserat());
+        assertEquals("", result.getText());
+        assertFalse(result.isFinished());
+        assertEquals(ReviewStatus.HASNOTHAPPENED, result.getReviewStatus());
+        assertEquals(LocalDate.now(ZURICH), result.getCreationDate());
+    }
+
+    @Test
+    public void acceptedInseratCreateReview_pastInserat_immediatelyPending() {
+        User receiver = new User();
+        receiver.setId("u2");
+        Inserat inserat = new Inserat();
+        inserat.setDate(LocalDate.now(ZURICH).minusDays(2));
+
+        Mockito.when(reviewRepository.existsBySenderAndInserat(sender, inserat))
+                .thenReturn(false);
+
+        Review result = reviewService.acceptedInseratCreateReview(sender, receiver, inserat);
+
+        assertEquals(ReviewStatus.PENDING, result.getReviewStatus());
+    }
+
+    @Test
+    public void acceptedInseratCreateReview_duplicate_returnsNullAndDoesNotSave() {
+        User receiver = new User();
+        receiver.setId("u2");
+        Inserat inserat = new Inserat();
+
+        Mockito.when(reviewRepository.existsBySenderAndInserat(sender, inserat))
+                .thenReturn(true);
+
+        Review result = reviewService.acceptedInseratCreateReview(sender, receiver, inserat);
+
+        assertNull(result);
+        Mockito.verify(reviewRepository, Mockito.never()).save(Mockito.any(Review.class));
+    }
+
+    // --- userIgnoresReview ---------------------------------------------------
+
+    @Test
+    public void userIgnoresReview_marksIgnoredAndFinished() {
+        Mockito.when(reviewRepository.findById("r1")).thenReturn(Optional.of(pendingReview));
+
+        Review result = reviewService.userIgnoresReview("r1");
+
+        assertEquals(ReviewStatus.IGNORED, result.getReviewStatus());
+        assertTrue(result.isFinished());
+    }
+
+    @Test
+    public void userIgnoresReview_notFound_throws404() {
+        Mockito.when(reviewRepository.findById("missing")).thenReturn(Optional.empty());
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> reviewService.userIgnoresReview("missing"));
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+    }
+
+    // --- getReviewsBySenderId / getReviewsByReceiverId -----------------------
+
+    @Test
+    public void getReviewsBySenderId_userExists_returnsList() {
+        Mockito.when(userRepository.findById("u1")).thenReturn(Optional.of(sender));
+        Mockito.when(reviewRepository.findBySender(sender)).thenReturn(List.of(pendingReview));
+
+        List<Review> result = reviewService.getReviewsBySenderId("u1");
+
+        assertEquals(1, result.size());
+        assertEquals("r1", result.get(0).getId());
+    }
+
+    @Test
+    public void getReviewsBySenderId_userNotFound_throws404() {
+        Mockito.when(userRepository.findById("missing")).thenReturn(Optional.empty());
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> reviewService.getReviewsBySenderId("missing"));
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+    }
+
+    @Test
+    public void getReviewsByReceiverId_userNotFound_throws404() {
+        Mockito.when(userRepository.findById("missing")).thenReturn(Optional.empty());
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> reviewService.getReviewsByReceiverId("missing"));
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+    }
+
+    // --- fetchReceivedReviews: only WRITTEN are returned ---------------------
+
+    @Test
+    public void fetchReceivedReviews_returnsOnlyWritten() {
+        Review written = new Review();
+        written.setId("r2");
+        written.setReviewStatus(ReviewStatus.WRITTEN);
+
+        Review pending = new Review();
+        pending.setId("r3");
+        pending.setReviewStatus(ReviewStatus.PENDING);
+
+        Review ignored = new Review();
+        ignored.setId("r4");
+        ignored.setReviewStatus(ReviewStatus.IGNORED);
+
+        Mockito.when(reviewRepository.findByReceiver(sender))
+                .thenReturn(List.of(written, pending, ignored));
+
+        List<Review> result = reviewService.fetchReceivedReviews(sender);
+
+        assertEquals(1, result.size());
+        assertEquals("r2", result.get(0).getId());
+    }
+
+    // --- userWritesReview: text length boundary ------------------------------
+
+    @Test
+    public void userWritesReview_textOver100Chars_throwsBadRequest() {
+        Mockito.when(reviewRepository.findById("r1")).thenReturn(Optional.of(pendingReview));
+        String tooLong = "a".repeat(101);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> reviewService.userWritesReview("r1", tooLong, 4.0));
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+    }
+
+    @Test
+    public void userWritesReview_textExactly100Chars_succeeds() {
+        Mockito.when(reviewRepository.findById("r1")).thenReturn(Optional.of(pendingReview));
+        String maxText = "a".repeat(100);
+
+        Review result = reviewService.userWritesReview("r1", maxText, 4.0);
+
+        assertEquals(ReviewStatus.WRITTEN, result.getReviewStatus());
+        assertEquals(100, result.getText().length());
     }
 }
