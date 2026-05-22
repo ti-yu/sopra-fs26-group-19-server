@@ -9,6 +9,8 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.repository.InseratRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.ReviewRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 
 import java.time.LocalDate;
@@ -27,11 +29,22 @@ public class UserServiceIntegrationTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Qualifier("inseratRepository")
+    @Autowired
+    private InseratRepository inseratRepository;
+
+    @Qualifier("reviewRepository")
+    @Autowired
+    private ReviewRepository reviewRepository;
+
     @Autowired
     private UserService userService;
 
     @BeforeEach
     public void setup() {
+        // Requests and reviews from other integration classes still reference users.
+        reviewRepository.deleteAll();
+        inseratRepository.deleteAll();
         userRepository.deleteAll();
     }
 
